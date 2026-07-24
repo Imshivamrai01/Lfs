@@ -157,7 +157,7 @@ export function SiteFooter() {
               rel="noreferrer"
               className="font-semibold text-white/70 hover:text-[color:var(--gold)] focus:text-[color:var(--gold)] transition-colors duration-300"
             >
-              Shine Info Solutions
+              Shine Infosolutions
             </a>
           </div>
 
