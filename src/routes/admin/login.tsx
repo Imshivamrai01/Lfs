@@ -16,7 +16,7 @@ function AdminLogin() {
     try {
       const res = await loginAdmin({ data: { email, password } });
       if (res.success) {
-        // Simple client side redirect for now
+        localStorage.setItem('adminToken', res.token);
         window.location.href = '/admin';
       }
     } catch (err: any) {
