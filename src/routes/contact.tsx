@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/site/page-header";
 import { SCHOOL } from "@/lib/lfs-data";
 import { Reveal, SectionEyebrow } from "@/components/site/reveal";
+import { WhatsAppIcon } from "@/components/site/whatsapp-icon";
 import { Phone, Mail, MapPin, Send, Clock, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -11,10 +12,10 @@ export const Route = createFileRoute("/contact")({
       { title: "Contact — Little Flower School, Salempur" },
       {
         name: "description",
-        content: "Get in touch with Little Flower School, Salempur — phone, email and directions.",
+        content: "Get in touch with Little Flower School, Salempur — phone, email, WhatsApp and directions.",
       },
       { property: "og:title", content: "Contact — Little Flower School, Salempur" },
-      { property: "og:description", content: "Phone, email and directions to LFS Salempur." },
+      { property: "og:description", content: "Phone, WhatsApp, email and directions to LFS Salempur." },
       { property: "og:url", content: "/contact" },
     ],
     links: [{ rel: "canonical", href: "/contact" }],
@@ -55,32 +56,47 @@ function ContactPage() {
                   {
                     icon: MapPin,
                     label: "Visit Us",
-                    value: "Salempur, District Deoria, Uttar Pradesh — India",
                     desc: "Main School Campus",
                     color: "oklch(0.82 0.15 82)",
+                    items: [
+                      {
+                        label: "Salempur, District Deoria, Uttar Pradesh — India",
+                      },
+                    ],
                   },
                   {
                     icon: Phone,
                     label: "Call Us",
-                    value: SCHOOL.phone,
-                    href: SCHOOL.phoneHref,
                     desc: "Mon-Sat, 8am to 2pm",
                     color: "oklch(0.52 0.18 255)",
+                    items: [
+                      { label: SCHOOL.phone, href: SCHOOL.phoneHref },
+                      { label: SCHOOL.phone2, href: SCHOOL.phone2Href },
+                    ],
+                  },
+                  {
+                    icon: WhatsAppIcon,
+                    label: "WhatsApp Now",
+                    desc: "Instant message & enquiry",
+                    color: "#25D366",
+                    items: [
+                      { label: `${SCHOOL.whatsapp} (Primary)`, href: SCHOOL.whatsappHref },
+                      { label: `${SCHOOL.whatsapp2} (Support)`, href: SCHOOL.whatsapp2Href },
+                    ],
                   },
                   {
                     icon: Mail,
                     label: "Email Us",
-                    value: SCHOOL.email,
-                    href: `mailto:${SCHOOL.email}`,
                     desc: "We reply within 24 hours",
                     color: "oklch(0.42 0.15 260)",
+                    items: [{ label: SCHOOL.email, href: `mailto:${SCHOOL.email}` }],
                   },
                   {
                     icon: Clock,
                     label: "Office Hours",
-                    value: "08:00 AM – 02:00 PM",
                     desc: "Closed on Sundays and public holidays",
                     color: "oklch(0.60 0.18 300)",
+                    items: [{ label: "08:00 AM – 02:00 PM" }],
                   },
                 ].map((c, i) => (
                   <motion.div
@@ -113,22 +129,29 @@ function ContactPage() {
                       <div className="font-display text-[1.1rem] font-semibold text-[color:var(--ink)]">
                         {c.label}
                       </div>
-                      <div className="mt-1 text-sm font-medium text-[color:var(--ink-muted)]">
+                      <div className="mt-0.5 text-sm font-medium text-[color:var(--ink-muted)]">
                         {c.desc}
                       </div>
-                      {c.href ? (
-                        <a
-                          href={c.href}
-                          className="mt-3 inline-flex items-center gap-1.5 font-display text-lg text-[color:var(--navy)] transition-colors hover:text-[color:var(--navy-deep)]"
-                        >
-                          {c.value}
-                          <ArrowUpRight className="h-4 w-4 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </a>
-                      ) : (
-                        <div className="mt-3 font-display text-lg text-[color:var(--ink)]">
-                          {c.value}
-                        </div>
-                      )}
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        {c.items.map((item, idx) =>
+                          item.href ? (
+                            <a
+                              key={idx}
+                              href={item.href}
+                              target={item.href.startsWith("http") ? "_blank" : undefined}
+                              rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                              className="inline-flex items-center gap-1.5 font-display text-base font-medium text-[color:var(--navy)] transition-colors hover:text-[color:var(--gold)]"
+                            >
+                              {item.label}
+                              <ArrowUpRight className="h-3.5 w-3.5 opacity-60 transition-all group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            </a>
+                          ) : (
+                            <div key={idx} className="font-display text-base text-[color:var(--ink)]">
+                              {item.label}
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))}

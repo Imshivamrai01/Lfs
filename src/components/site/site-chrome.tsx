@@ -3,6 +3,8 @@ import { LenisProvider } from "./lenis-provider";
 import { SiteNav } from "./site-nav";
 import { SiteFooter } from "./site-footer";
 import { ScrollProgress } from "./scroll-progress";
+import { FloatingActions } from "./floating-actions";
+import { AnnouncementPopup } from "./announcement-popup";
 import { useRouterState } from "@tanstack/react-router";
 
 export function SiteChrome({ children }: { children: ReactNode }) {
@@ -22,7 +24,10 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       <main id="main" className="min-h-screen">
         {children}
       </main>
+      {!isAdminPath && <AnnouncementPopup />}
+      {!isAdminPath && <FloatingActions />}
       {!isAdminPath && <SiteFooter />}
     </LenisProvider>
   );
 }
+

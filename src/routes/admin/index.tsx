@@ -1,9 +1,9 @@
 import { createFileRoute, useRouterState } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { runMigration } from '../../api/migrate';
-import { getManagement, getAchievers, getAlumni, getEvents, getAlbums, getPhotosByAlbum, getExamSchedules, getExamResults, getExamNotices, getExamGuidelines } from '../../api/functions';
+import { getManagement, getAchievers, getAlumni, getEvents, getAlbums, getPhotosByAlbum, getExamSchedules, getExamResults, getExamNotices, getExamGuidelines, getPopups } from '../../api/functions';
 import { deleteDocument, updateDocument, createDocument, getDashboardStats } from '../../api/admin';
-import { Plus, Trash2, Edit2, Loader2, X, Users, Award, GraduationCap, CalendarDays, ImageIcon, ChevronLeft, ImagePlus } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, X, Users, Award, GraduationCap, CalendarDays, ImageIcon, ChevronLeft, ImagePlus, Megaphone, Eye, ExternalLink, Sparkles, Check, Power } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
@@ -16,6 +16,7 @@ function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {currentTab === 'dashboard' && <DashboardTab />}
+      {currentTab === 'popup' && <PopupTab />}
       {currentTab === 'management' && <CrudTab title="Management" modelName="Management" fetchData={getManagement} defaultState={{ name: '', role: '', details: '', imageUrl: '' }} />}
       {currentTab === 'achievers' && <CrudTab title="Achievers" modelName="Achiever" fetchData={getAchievers} defaultState={{ name: '', batchYear: '', achievement: '', exam: '', pct: '', rank: 99, category: 'Academic', imageUrl: '' }} />}
       {currentTab === 'alumni' && <CrudTab title="Alumni" modelName="Alumni" fetchData={getAlumni} defaultState={{ name: '', batchYear: '', currentRole: '', company: '', message: '', imageUrl: '', linkedinUrl: '' }} />}
@@ -442,3 +443,583 @@ function AlbumPhotosManager({ album, onBack }: { album: any, onBack: () => void 
     </div>
   );
 }
+
+function PopupTab() {
+  const [popups, setPopups] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [previewPopup, setPreviewPopup] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    imageUrl: '',
+    description: '',
+    linkUrl: '',
+    linkText: 'Learn More',
+    showText: true,
+    isActive: true,
+  });
+
+  const loadPopups = async () => {
+    setLoading(true);
+    try {
+      const res = await getPopups();
+      setPopups(res || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPopups();
+  }, []);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData({
+      title: '',
+      imageUrl: '',
+      description: '',
+      linkUrl: '',
+      linkText: 'Learn More',
+      showText: true,
+      isActive: true,
+    });
+    setModalOpen(true);
+  };
+
+  const openEdit = (p: any) => {
+    setEditingId(p._id);
+    setFormData({
+      title: p.title || '',
+      imageUrl: p.imageUrl || '',
+      description: p.description || '',
+      linkUrl: p.linkUrl || '',
+      linkText: p.linkText || 'Learn More',
+      showText: p.showText ?? true,
+      isActive: p.isActive ?? true,
+    });
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this popup?')) return;
+    try {
+      await deleteDocument({ data: { modelName: 'Popup', id } });
+      loadPopups();
+    } catch (err: any) {
+      alert('Failed to delete: ' + err.message);
+    }
+  };
+
+  const handleToggleActive = async (p: any) => {
+    try {
+      await updateDocument({
+        data: {
+          modelName: 'Popup',
+          id: p._id,
+          updateData: { isActive: !p.isActive },
+        },
+      });
+      loadPopups();
+    } catch (err: any) {
+      alert('Failed to update status: ' + err.message);
+    }
+  };
+
+  const handleImageUpload = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+
+    const formDataUpload = new FormData();
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dulns8qug';
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'lfs_preset';
+
+    formDataUpload.append('file', file);
+    formDataUpload.append('upload_preset', uploadPreset);
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+        method: 'POST',
+        body: formDataUpload,
+      });
+      const data = await res.json();
+      if (data.secure_url) {
+        setFormData((prev) => ({ ...prev, imageUrl: data.secure_url }));
+      } else {
+        alert('Failed to upload image: ' + (data.error?.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error uploading file. Make sure Cloudinary preset is configured.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    if (!formData.title || !formData.imageUrl) {
+      alert('Please provide a Title and an Image.');
+      return;
+    }
+
+    try {
+      if (editingId) {
+        await updateDocument({
+          data: {
+            modelName: 'Popup',
+            id: editingId,
+            updateData: formData,
+          },
+        });
+      } else {
+        await createDocument({
+          data: {
+            modelName: 'Popup',
+            createData: formData,
+          },
+        });
+      }
+      setModalOpen(false);
+      loadPopups();
+    } catch (err: any) {
+      alert('Failed to save: ' + err.message);
+    }
+  };
+
+  const activePopup = popups.find((p) => p.isActive);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-950/20 relative overflow-hidden">
+        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5 text-yellow-400 text-xs font-bold uppercase tracking-widest mb-2">
+            <Sparkles size={14} /> Website Homepage Popup
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight">Announcement & Event Popups</h2>
+          <p className="text-blue-200 text-sm mt-1 max-w-xl">
+            Upload event flyers, admission notices, or festival greetings that automatically show in a popup when visitors open the website.
+          </p>
+        </div>
+        <button
+          onClick={openCreate}
+          className="relative z-10 flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-blue-950 px-5 py-3 rounded-2xl font-bold text-sm transition-transform active:scale-95 shadow-lg shadow-yellow-400/20"
+        >
+          <Plus size={18} strokeWidth={2.5} />
+          Create New Popup
+        </button>
+      </div>
+
+      {/* Active Popup Status Card */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${activePopup ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-400'}`}>
+            <Megaphone size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${activePopup ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
+                {activePopup ? '● LIVE ON WEBSITE' : '○ NO ACTIVE POPUP'}
+              </span>
+              {activePopup && (
+                <span className="text-xs text-gray-500 font-medium truncate max-w-xs sm:max-w-md">
+                  Showing: <strong className="text-gray-800 font-semibold">{activePopup.title}</strong>
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {activePopup
+                ? 'Visitors will see this popup modal when opening the website homepage.'
+                : 'Turn on the switch on any popup below to display it to visitors.'}
+            </p>
+          </div>
+        </div>
+
+        {activePopup && (
+          <button
+            onClick={() => setPreviewPopup(activePopup)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition-colors shrink-0"
+          >
+            <Eye size={16} /> Live Preview
+          </button>
+        )}
+      </div>
+
+      {/* Popups List */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+          <h3 className="font-bold text-gray-900 text-base">All Popups & Notices ({popups.length})</h3>
+        </div>
+
+        {loading ? (
+          <div className="p-16 text-center text-gray-400 flex flex-col items-center">
+            <Loader2 className="animate-spin mb-3" size={32} />
+            <p className="font-medium text-sm tracking-wide uppercase">Loading Popups...</p>
+          </div>
+        ) : popups.length === 0 ? (
+          <div className="p-16 text-center text-gray-400">
+            <Megaphone size={40} className="mx-auto text-gray-300 mb-3" />
+            <p className="font-medium text-sm tracking-wide uppercase mb-1">No Popups Created Yet</p>
+            <p className="text-xs text-gray-400 mb-4">Create your first popup banner to show notices to visitors.</p>
+            <button
+              onClick={openCreate}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-colors shadow-sm"
+            >
+              Create First Popup
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {popups.map((p) => (
+              <div
+                key={p._id}
+                className={`rounded-2xl border transition-all duration-300 overflow-hidden flex flex-col justify-between bg-white ${
+                  p.isActive
+                    ? 'border-emerald-300 shadow-md ring-2 ring-emerald-400/20'
+                    : 'border-gray-200 hover:border-gray-300 shadow-sm'
+                }`}
+              >
+                <div>
+                  {/* Image Poster */}
+                  <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden group">
+                    <img
+                      src={p.imageUrl}
+                      alt={p.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-md backdrop-blur-md ${
+                          p.isActive
+                            ? 'bg-emerald-600/90 text-white'
+                            : 'bg-gray-900/70 text-gray-200'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${p.isActive ? 'bg-white animate-pulse' : 'bg-gray-400'}`} />
+                        {p.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      {p.showText === false && (
+                        <span className="bg-black/60 text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
+                          Image Only
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setPreviewPopup(p)}
+                      className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white p-2 rounded-xl backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-medium"
+                    >
+                      <Eye size={14} /> Preview
+                    </button>
+                  </div>
+
+                  {/* Body Details */}
+                  <div className="p-5">
+                    <h4 className="font-bold text-gray-900 text-base line-clamp-1">{p.title}</h4>
+                    {p.description && (
+                      <p className="text-gray-500 text-xs mt-1.5 line-clamp-2">{p.description}</p>
+                    )}
+                    {p.linkUrl && (
+                      <div className="mt-3 flex items-center gap-1.5 text-blue-600 text-xs font-medium truncate">
+                        <ExternalLink size={13} className="shrink-0" />
+                        <span className="truncate">{p.linkText || 'Learn More'}: {p.linkUrl}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Footer Actions */}
+                <div className="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={p.isActive}
+                        onChange={() => handleToggleActive(p)}
+                      />
+                      <div className="w-10 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                    <span className="text-xs font-medium text-gray-600">
+                      {p.isActive ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEdit(p)}
+                      title="Edit Popup"
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p._id)}
+                      title="Delete Popup"
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Create / Edit Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-[100] bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] ring-1 ring-black/5">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-r from-blue-900 to-indigo-900 text-white">
+              <div>
+                <h3 className="text-lg font-bold">{editingId ? 'Edit Popup Modal' : 'Create New Popup Modal'}</h3>
+                <p className="text-xs text-blue-200 mt-0.5">Configure the popup banner shown to visitors.</p>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 custom-scrollbar">
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Popup Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g., Annual Sports Day 2026 / Admissions Open"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none text-sm shadow-sm"
+                />
+              </div>
+
+              {/* Image Upload / URL */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Notice / Event Poster Image <span className="text-red-500">*</span>
+                </label>
+
+                <div className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  {formData.imageUrl && (
+                    <div className="relative w-full h-44 rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-contain bg-slate-900/5" />
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 items-center">
+                    <label className="cursor-pointer relative overflow-hidden bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-colors shadow-sm inline-flex items-center gap-2">
+                      {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
+                      {uploading ? 'Uploading to Cloudinary...' : 'Upload Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Or Paste Image URL</p>
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Short Description / Caption (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Optional brief note or details to show under the poster..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none text-sm shadow-sm"
+                />
+              </div>
+
+              {/* Toggle: Show Title & Text in Popup */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                <div>
+                  <p className="text-sm font-bold text-gray-800">Show Title & Text in Popup</p>
+                  <p className="text-xs text-gray-500">When enabled, title and description text will be shown on the popup.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={formData.showText}
+                    onChange={(e) => setFormData({ ...formData, showText: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Action Link & Text */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                    Button Action Link <span className="text-gray-400 font-normal lowercase">(optional - leave blank for no button)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. /events or /admissions (optional)"
+                    value={formData.linkUrl}
+                    onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none text-sm shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                    Button Label <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Register Now / Apply / View Details"
+                    value={formData.linkText}
+                    onChange={(e) => setFormData({ ...formData, linkText: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none text-sm shadow-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Active Toggle */}
+              <div className="pt-2 flex items-center justify-between p-4 bg-blue-50/60 rounded-2xl border border-blue-100">
+                <div>
+                  <p className="text-sm font-bold text-blue-950">Activate Immediately</p>
+                  <p className="text-xs text-blue-700">Display this popup on the website homepage.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 flex justify-end gap-3 sticky bottom-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30"
+                >
+                  Save Popup
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Live Preview Modal */}
+      {previewPopup && (
+        <div className="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 transition-opacity animate-in fade-in duration-300">
+          <div className="relative w-full max-w-xl md:max-w-2xl bg-white rounded-3xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 transform animate-in zoom-in-95 duration-300 ring-1 ring-black/10 flex flex-col">
+            {/* Top Floating Close Button */}
+            <button
+              onClick={() => setPreviewPopup(null)}
+              aria-label="Close preview"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-all hover:scale-110 active:scale-95 border border-white/20"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
+
+            {/* Poster Image */}
+            <div className="relative w-full bg-slate-900 overflow-hidden">
+              <img
+                src={previewPopup.imageUrl}
+                alt={previewPopup.title}
+                className="w-full h-auto max-h-[65vh] object-contain mx-auto"
+              />
+            </div>
+
+            {/* Title & Description (Shown when showText is enabled) */}
+            {previewPopup.showText !== false && (previewPopup.title || previewPopup.description) && (
+              <div className="px-5 sm:px-6 py-4 bg-gradient-to-b from-white to-slate-50/50 border-t border-slate-100">
+                {previewPopup.title && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 text-[11px] font-bold uppercase tracking-wider">
+                      <Sparkles size={12} className="text-blue-600" /> Announcement
+                    </span>
+                    <h4 className="text-base sm:text-lg font-bold text-gray-900 font-display">
+                      {previewPopup.title}
+                    </h4>
+                  </div>
+                )}
+                {previewPopup.description && (
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mt-1">
+                    {previewPopup.description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Bottom Bar Controls */}
+            <div className="px-5 sm:px-6 py-3.5 bg-gray-50/90 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-[11px] font-bold uppercase tracking-wider">
+                  <Sparkles size={12} /> Live Preview
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 ml-auto">
+                <button
+                  onClick={() => setPreviewPopup(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-200/70 transition-colors"
+                >
+                  Dismiss
+                </button>
+
+                {previewPopup.linkUrl && previewPopup.linkUrl.trim().length > 0 && (
+                  <a
+                    href={previewPopup.linkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white shadow-md shadow-blue-900/20 hover:shadow-lg transition-all active:scale-95"
+                  >
+                    {previewPopup.linkText || 'View Details'} <ExternalLink size={13} strokeWidth={2.5} />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+

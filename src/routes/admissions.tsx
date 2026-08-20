@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/site/page-header";
 import { Reveal, SectionEyebrow } from "@/components/site/reveal";
 import { FAQS, SCHOOL } from "@/lib/lfs-data";
 import { CTA } from "@/components/home/cta";
+import { WhatsAppIcon } from "@/components/site/whatsapp-icon";
 import { FileText, Calendar, ClipboardCheck, GraduationCap, Download, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/admissions")({
@@ -62,14 +63,22 @@ function AdmissionsPage() {
       >
         <div className="flex flex-wrap gap-3">
           <a
+            href={SCHOOL.whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#25D366]/25 transition-all hover:bg-[#20bd5a] hover:scale-[1.02]"
+          >
+            <WhatsAppIcon className="h-4 w-4" /> Chat on WhatsApp
+          </a>
+          <a
             href={SCHOOL.phoneHref}
-            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3.5 text-sm font-semibold text-[color:var(--navy-deep)]"
+            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3.5 text-sm font-semibold text-[color:var(--navy-deep)] transition-all hover:scale-[1.02]"
           >
             <Phone className="h-4 w-4" /> {SCHOOL.phone}
           </a>
           <a
             href="#prospectus"
-            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur"
+            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:border-[color:var(--gold)]"
           >
             <Download className="h-4 w-4" /> Download Prospectus
           </a>

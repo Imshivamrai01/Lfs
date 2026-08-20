@@ -10,7 +10,8 @@ import {
   ExamScheduleModel,
   ExamResultModel,
   ExamNoticeModel,
-  ExamGuidelineModel
+  ExamGuidelineModel,
+  PopupModel
 } from '../lib/models';
 
 const getModel = (modelName: string) => {
@@ -25,6 +26,7 @@ const getModel = (modelName: string) => {
     case 'ExamResult': return ExamResultModel;
     case 'ExamNotice': return ExamNoticeModel;
     case 'ExamGuideline': return ExamGuidelineModel;
+    case 'Popup': return PopupModel;
     default: throw new Error('Invalid model name');
   }
 };

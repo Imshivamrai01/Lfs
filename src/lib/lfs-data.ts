@@ -6,6 +6,13 @@ export const SCHOOL = {
   society: "Little Flower Mission Education Society, Gorakhpur",
   phone: "+91 94533 44112",
   phoneHref: "tel:+919453344112",
+  phone2: "+91 87659 32092",
+  phone2Href: "tel:+918765932092",
+  whatsapp: "+91 94533 44112",
+  whatsappHref: "https://wa.me/919453344112?text=Hello%20Little%20Flower%20School,%20I%20would%20like%20to%20enquire%20about%20admissions.",
+  whatsapp2: "+91 87659 32092",
+  whatsapp2Href: "https://wa.me/918765932092?text=Hello%20Little%20Flower%20School,%20I%20would%20like%20to%20enquire%20about%20admissions.",
+  feePayUrl: "https://www.lfssalempur.online/payonline/",
   email: "littleflowersalempur@gmail.com",
 };
 
@@ -39,10 +46,6 @@ export const ACADEMICS = [
   {
     title: "Languages",
     desc: "English, Hindi and literature — building articulate voices for a wider world.",
-  },
-  {
-    title: "Bible Studies",
-    desc: "Values of faith, compassion and integrity — applied to everyday choices.",
   },
   {
     title: "Social Sciences",

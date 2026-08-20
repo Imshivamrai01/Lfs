@@ -3,6 +3,8 @@ import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import { RevealText } from "@/components/site/reveal";
+import { WhatsAppIcon } from "@/components/site/whatsapp-icon";
+import { SCHOOL } from "@/lib/lfs-data";
 import heroImg from "@/assets/hero-campus.jpg";
 import heroVideo from "@/assets/Videos/LFSintro.mp4";
 
@@ -102,6 +104,15 @@ export function Hero() {
               Apply for Admission
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
+            <a
+              href={SCHOOL.whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-[#25D366]/25 transition-transform hover:scale-[1.02] hover:bg-[#20bd5a]"
+            >
+              <WhatsAppIcon className="h-5 w-5" />
+              WhatsApp Us
+            </a>
             <Link
               to="/campus"
               className="group inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-6 py-4 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:border-[color:var(--gold)] hover:text-[color:var(--gold)]"

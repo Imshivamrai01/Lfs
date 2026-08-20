@@ -10,7 +10,8 @@ import {
   ExamScheduleModel,
   ExamResultModel,
   ExamNoticeModel,
-  ExamGuidelineModel
+  ExamGuidelineModel,
+  PopupModel
 } from '../lib/models';
 import jwt from 'jsonwebtoken';
 
@@ -98,3 +99,20 @@ export const getExamGuidelines = createServerFn({ method: 'GET' })
     const guidelines = await ExamGuidelineModel.find().sort({ order: 1 }).lean();
     return guidelines.map(g => ({ ...g, _id: g._id?.toString() }));
   });
+
+// --- POPUP / ANNOUNCEMENT MODAL ---
+export const getActivePopup = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    await connectToDatabase();
+    const popup = await PopupModel.findOne({ isActive: true }).sort({ createdAt: -1 }).lean();
+    if (!popup) return null;
+    return { ...popup, _id: popup._id?.toString() };
+  });
+
+export const getPopups = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    await connectToDatabase();
+    const popups = await PopupModel.find().sort({ createdAt: -1 }).lean();
+    return popups.map(p => ({ ...p, _id: p._id?.toString() }));
+  });
+

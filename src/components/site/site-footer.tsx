@@ -104,6 +104,12 @@ export function SiteFooter() {
                 <Phone className="h-4 w-4" /> +91 94533 44112
               </a>
               <a
+                href="tel:+918765932092"
+                className="flex items-center gap-2 text-white/80 hover:text-[color:var(--gold)]"
+              >
+                <Phone className="h-4 w-4" /> +91 87659 32092
+              </a>
+              <a
                 href="mailto:littleflowersalempur@gmail.com"
                 className="flex items-center gap-2 text-white/80 hover:text-[color:var(--gold)]"
               >

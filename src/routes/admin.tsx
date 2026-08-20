@@ -12,7 +12,8 @@ import {
   FileText,
   FileCheck,
   Bell,
-  ListChecks
+  ListChecks,
+  Megaphone
 } from 'lucide-react';
 
 export const Route = createFileRoute('/admin')({
@@ -52,6 +53,7 @@ function AdminLayout() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+    { name: 'Popup Modal', icon: Megaphone, path: '/admin?tab=popup' },
     { name: 'Management', icon: Users, path: '/admin?tab=management' },
     { name: 'Achievers', icon: Award, path: '/admin?tab=achievers' },
     { name: 'Alumni', icon: GraduationCap, path: '/admin?tab=alumni' },

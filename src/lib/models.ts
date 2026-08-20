@@ -159,6 +159,29 @@ const ExamGuidelineSchema: Schema = new Schema({
   order: { type: Number, default: 0 },
 });
 
+// --- Announcement / Event Popup Schema ---
+export interface IPopup extends Document {
+  title: string;
+  imageUrl: string;
+  description?: string;
+  linkUrl?: string;
+  linkText?: string;
+  showText?: boolean;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+const PopupSchema: Schema = new Schema({
+  title: { type: String, required: true },
+  imageUrl: { type: String, required: true },
+  description: { type: String },
+  linkUrl: { type: String },
+  linkText: { type: String, default: "Learn More" },
+  showText: { type: Boolean, default: true },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+});
+
 // Export Models (using mongoose.models to prevent OverwriteModelError in hot reload)
 export const AlumniModel = mongoose.models.Alumni || mongoose.model<IAlumni>("Alumni", AlumniSchema);
 export const AchieverModel = mongoose.models.Achiever || mongoose.model<IAchiever>("Achiever", AchieverSchema);
@@ -170,3 +193,5 @@ export const ExamScheduleModel = mongoose.models.ExamSchedule || mongoose.model<
 export const ExamResultModel = mongoose.models.ExamResult || mongoose.model<IExamResult>("ExamResult", ExamResultSchema);
 export const ExamNoticeModel = mongoose.models.ExamNotice || mongoose.model<IExamNotice>("ExamNotice", ExamNoticeSchema);
 export const ExamGuidelineModel = mongoose.models.ExamGuideline || mongoose.model<IExamGuideline>("ExamGuideline", ExamGuidelineSchema);
+export const PopupModel = mongoose.models.Popup || mongoose.model<IPopup>("Popup", PopupSchema);
+
