@@ -29,12 +29,68 @@ export const loginAdmin = createServerFn({ method: 'POST' })
 
 // --- FETCH FUNCTIONS (Public) ---
 
+const DEFAULT_ALUMNI = [
+  {
+    name: "Rahul Sharma",
+    batchYear: "2005",
+    currentRole: "Software Engineer",
+    company: "Google, Bangalore",
+    message: "The discipline and values instilled at LFS shaped the person I am today.",
+    imageUrl: "",
+  },
+  {
+    name: "Priya Singh",
+    batchYear: "2008",
+    currentRole: "Civil Services (IAS)",
+    company: "Government of India",
+    message: "My teachers believed in me before I believed in myself. Forever grateful.",
+    imageUrl: "",
+  },
+  {
+    name: "Amit Kumar",
+    batchYear: "2010",
+    currentRole: "Doctor (MBBS, MD)",
+    company: "AIIMS, New Delhi",
+    message: "LFS gave me the foundation to dream big and the courage to achieve it.",
+    imageUrl: "",
+  },
+  {
+    name: "Sneha Mishra",
+    batchYear: "2012",
+    currentRole: "Chartered Accountant",
+    company: "Deloitte, Mumbai",
+    message: "From morning assemblies to boardrooms — the LFS spirit never leaves you.",
+    imageUrl: "",
+  },
+  {
+    name: "Vikash Yadav",
+    batchYear: "2003",
+    currentRole: "Army Officer",
+    company: "Indian Army",
+    message: "The motto 'For God and Man' taught me service before self.",
+    imageUrl: "",
+  },
+  {
+    name: "Anjali Gupta",
+    batchYear: "2015",
+    currentRole: "Research Scientist",
+    company: "IIT Kanpur",
+    message: "My curiosity was first nurtured in the science labs of Little Flower School.",
+    imageUrl: "",
+  },
+];
+
 export const getAlumni = createServerFn({ method: 'GET' })
   .handler(async () => {
     await connectToDatabase();
-    const alumni = await AlumniModel.find().sort({ _id: -1 }).lean();
+    let alumni = await AlumniModel.find().sort({ _id: -1 }).lean();
+    if (alumni.length === 0) {
+      await AlumniModel.insertMany(DEFAULT_ALUMNI);
+      alumni = await AlumniModel.find().sort({ _id: -1 }).lean();
+    }
     return alumni.map(a => ({ ...a, _id: a._id?.toString() }));
   });
+
 
 export const registerAlumni = createServerFn({ method: 'POST' })
   .validator((data: any) => data)

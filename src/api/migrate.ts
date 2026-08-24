@@ -143,5 +143,62 @@ export const runMigration = createServerFn({ method: 'POST' })
       await ExamGuidelineModel.insertMany(guidelineDocs);
     }
 
+    // 6. Migrate Alumni
+    const alumniCount = await AlumniModel.countDocuments();
+    if (alumniCount === 0) {
+      const NOTABLE_ALUMNI = [
+        {
+          name: "Rahul Sharma",
+          batchYear: "2005",
+          currentRole: "Software Engineer",
+          company: "Google, Bangalore",
+          message: "The discipline and values instilled at LFS shaped the person I am today.",
+          imageUrl: "",
+        },
+        {
+          name: "Priya Singh",
+          batchYear: "2008",
+          currentRole: "Civil Services (IAS)",
+          company: "Government of India",
+          message: "My teachers believed in me before I believed in myself. Forever grateful.",
+          imageUrl: "",
+        },
+        {
+          name: "Amit Kumar",
+          batchYear: "2010",
+          currentRole: "Doctor (MBBS, MD)",
+          company: "AIIMS, New Delhi",
+          message: "LFS gave me the foundation to dream big and the courage to achieve it.",
+          imageUrl: "",
+        },
+        {
+          name: "Sneha Mishra",
+          batchYear: "2012",
+          currentRole: "Chartered Accountant",
+          company: "Deloitte, Mumbai",
+          message: "From morning assemblies to boardrooms — the LFS spirit never leaves you.",
+          imageUrl: "",
+        },
+        {
+          name: "Vikash Yadav",
+          batchYear: "2003",
+          currentRole: "Army Officer",
+          company: "Indian Army",
+          message: "The motto 'For God and Man' taught me service before self.",
+          imageUrl: "",
+        },
+        {
+          name: "Anjali Gupta",
+          batchYear: "2015",
+          currentRole: "Research Scientist",
+          company: "IIT Kanpur",
+          message: "My curiosity was first nurtured in the science labs of Little Flower School.",
+          imageUrl: "",
+        },
+      ];
+      await AlumniModel.insertMany(NOTABLE_ALUMNI);
+    }
+
     return { success: true, message: "Migration completed successfully!" };
   });
+
