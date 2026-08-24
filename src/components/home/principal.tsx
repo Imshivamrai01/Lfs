@@ -1,8 +1,46 @@
+import { useState, useEffect } from "react";
 import { Reveal, SectionEyebrow } from "@/components/site/reveal";
 import { PRINCIPAL_IMG } from "@/lib/lfs-data";
+import { getManagement } from "@/api/functions";
 import { Quote } from "lucide-react";
 
 export function Principal() {
+  const [principalData, setPrincipalData] = useState<{
+    name: string;
+    role: string;
+    imageUrl: string;
+    message?: string;
+  }>({
+    name: "Fr. Jubish Thomas CST",
+    role: "Principal",
+    imageUrl: PRINCIPAL_IMG,
+    message: undefined,
+  });
+
+  useEffect(() => {
+    getManagement()
+      .then((res) => {
+        if (res && res.length > 0) {
+          const principal = res.find(
+            (m: any) =>
+              (m.role && m.role.toLowerCase().includes("principal")) ||
+              (m.name && m.name.toLowerCase().includes("jubish"))
+          );
+          if (principal) {
+            setPrincipalData({
+              name: principal.name || "Fr. Jubish Thomas CST",
+              role: principal.role || "Principal",
+              imageUrl: principal.imageUrl || PRINCIPAL_IMG,
+              message: principal.message || undefined,
+            });
+          }
+        }
+      })
+      .catch(() => {
+        // keep fallback
+      });
+  }, []);
+
   return (
     <section
       id="principal"
@@ -18,14 +56,17 @@ export function Principal() {
             <div className="absolute -inset-6 rounded-[36px] bg-gradient-to-br from-[color:var(--gold)]/30 to-transparent blur-2xl" />
             <div className="relative overflow-hidden rounded-[28px] border border-white/15 shadow-[var(--shadow-lift)]">
               <img
-                src={PRINCIPAL_IMG}
-                alt="Fr. Jubish Thomas CST, Principal"
+                src={principalData.imageUrl || PRINCIPAL_IMG}
+                alt={`${principalData.name}, ${principalData.role}`}
                 loading="lazy"
                 className="aspect-[4/5] w-full object-cover"
+                onError={(e: any) => {
+                  e.currentTarget.src = PRINCIPAL_IMG;
+                }}
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-                <div className="font-display text-xl text-white">Fr. Jubish Thomas CST</div>
-                <div className="text-xs uppercase tracking-[0.22em] text-white/70">Principal</div>
+                <div className="font-display text-xl text-white">{principalData.name}</div>
+                <div className="text-xs uppercase tracking-[0.22em] text-white/70">{principalData.role}</div>
               </div>
             </div>
           </Reveal>
@@ -43,25 +84,33 @@ export function Principal() {
             </Reveal>
             <Reveal delay={0.15} className="mt-8">
               <Quote className="mb-4 h-8 w-8 text-[color:var(--gold)]/60" />
-              <p className="text-lg leading-relaxed text-white/80">
-                At Little Flower School, we believe every child is a unique gift — and our task is
-                to help each one discover their light. Rooted in the Catholic tradition of the CST
-                Fathers and open to families of every faith, we shape students who are academically
-                strong, morally grounded and quietly confident.
-              </p>
-              <p className="mt-5 text-base leading-relaxed text-white/70">
-                We invite you to walk our corridors, sit in our classrooms and meet our teachers.
-                You will find a school that takes learning seriously and children even more so.
-              </p>
+              {principalData.message ? (
+                <p className="text-lg leading-relaxed text-white/80 whitespace-pre-line">
+                  {principalData.message}
+                </p>
+              ) : (
+                <>
+                  <p className="text-lg leading-relaxed text-white/80">
+                    At Little Flower School, we believe every child is a unique gift — and our task is
+                    to help each one discover their light. Rooted in the Catholic tradition of the CST
+                    Fathers and open to families of every faith, we shape students who are academically
+                    strong, morally grounded and quietly confident.
+                  </p>
+                  <p className="mt-5 text-base leading-relaxed text-white/70">
+                    We invite you to walk our corridors, sit in our classrooms and meet our teachers.
+                    You will find a school that takes learning seriously and children even more so.
+                  </p>
+                </>
+              )}
             </Reveal>
             <Reveal
               delay={0.3}
               className="mt-8 inline-flex items-center gap-3 border-l-2 border-[color:var(--gold)] pl-4"
             >
               <div>
-                <div className="font-display text-lg text-white">Fr. Jubish Thomas CST</div>
+                <div className="font-display text-lg text-white">{principalData.name}</div>
                 <div className="text-xs uppercase tracking-[0.2em] text-white/60">
-                  Principal · Little Flower School, Salempur
+                  {principalData.role} · Little Flower School, Salempur
                 </div>
               </div>
             </Reveal>
@@ -71,3 +120,4 @@ export function Principal() {
     </section>
   );
 }
+

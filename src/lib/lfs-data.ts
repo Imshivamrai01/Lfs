@@ -171,7 +171,7 @@ export const GALLERY = [
   "https://res.cloudinary.com/dulns8qug/image/upload/v1742628643/Gallery_images/ownkvpmxak6fqe1af67d.jpg",
 ];
 
-export const PRINCIPAL_IMG = "https://www.lfssalempur.com/assets/img/principal/lfsprincipal.jpg";
+export const PRINCIPAL_IMG = "https://res.cloudinary.com/dulns8qug/image/upload/v1741775455/LFS/Management_images/qdfo3prndmmcezmdgdkb.jpg";
 
 export const DISCIPLINE_RULES: string[] = [
   "Students shall maintain a high standard of good manners and general behavior.",
