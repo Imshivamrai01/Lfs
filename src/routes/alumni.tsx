@@ -154,9 +154,56 @@ function FormField({
 
 /* ─── Page ─────────────────────────────────────────────────────────── */
 
+const COLOR_PALETTE = [
+  "oklch(0.55 0.18 255)",
+  "oklch(0.55 0.18 145)",
+  "oklch(0.62 0.20 27)",
+  "oklch(0.55 0.20 300)",
+  "oklch(0.50 0.16 200)",
+  "oklch(0.60 0.18 80)",
+];
+
+function getInitials(name: string = "") {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function AlumniPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [alumniList, setAlumniList] = useState<any[]>(NOTABLE_ALUMNI);
+
+  useEffect(() => {
+    getAlumni()
+      .then((data) => {
+        if (data && data.length > 0) {
+          const mapped = data.map((item: any, index: number) => ({
+            name: item.name,
+            batch: item.batchYear ? `Class of ${item.batchYear}` : (item.batch || "Alumni"),
+            role: item.currentRole || item.role || "Professional",
+            org: item.company || item.org || "",
+            quote: item.message || item.quote || "Proud to be a part of the Little Flower family.",
+            imageUrl: item.imageUrl || null,
+            initials: getInitials(item.name) || "LF",
+            color: COLOR_PALETTE[index % COLOR_PALETTE.length],
+            linkedinUrl: item.linkedinUrl || null,
+          }));
+          setAlumniList(mapped);
+        } else {
+          setAlumniList(NOTABLE_ALUMNI);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading alumni:", err);
+        setAlumniList(NOTABLE_ALUMNI);
+      });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,9 +284,9 @@ function AlumniPage() {
           </div>
 
           <div className="mx-auto mt-16 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {alumni.map((a, i) => (
+            {alumniList.map((a, i) => (
               <Reveal
-                key={a.name}
+                key={a.name + i}
                 delay={i * 0.07}
                 className="group relative overflow-hidden rounded-3xl border border-[color:var(--border)] bg-white p-6 shadow-[var(--shadow-soft)] transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
               >
@@ -252,12 +299,20 @@ function AlumniPage() {
                 <div className="relative z-10">
                   {/* Avatar + Info */}
                   <div className="flex items-center gap-3">
-                    <div
-                      className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
-                      style={{ backgroundColor: a.color }}
-                    >
-                      {a.initials}
-                    </div>
+                    {a.imageUrl ? (
+                      <img
+                        src={a.imageUrl}
+                        alt={a.name}
+                        className="h-12 w-12 shrink-0 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div
+                        className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
+                        style={{ backgroundColor: a.color }}
+                      >
+                        {a.initials}
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-display text-base font-semibold text-[color:var(--ink)]">
                         {a.name}
@@ -272,7 +327,7 @@ function AlumniPage() {
                       <Briefcase className="h-3 w-3" /> {a.role}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-[color:var(--ink-muted)]">{a.org}</p>
+                  {a.org && <p className="mt-1 text-xs text-[color:var(--ink-muted)]">{a.org}</p>}
 
                   {/* Quote */}
                   <div className="mt-4 border-t border-[color:var(--border)] pt-4">
@@ -287,6 +342,7 @@ function AlumniPage() {
           </div>
         </div>
       </section>
+
 
       {/* ── Why Stay Connected ─────────────────────────────────────── */}
       <section className="screen-fit-section-large bg-[color:var(--section)]">
