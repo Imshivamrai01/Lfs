@@ -848,26 +848,49 @@ export function Achievers() {
   useEffect(() => {
     getAchievers()
       .then((data) => {
-        const mappedData = data.map((item: any) => ({
-          name: item.name,
-          exam: item.achievement || item.exam || "Achiever",
-          pct: item.pct || "",
-          avatar: item.imageUrl || item.avatar || getFallbackImage(item.name),
-          poster: item.imageUrl || item.poster || getFallbackImage(item.name),
-        }));
-        setAchievers(mappedData);
+        if (data && data.length > 0) {
+          const mappedData = data.map((item: any) => {
+            // Extract pct if stored in achievement
+            let pct = item.pct || "";
+            if (!pct && item.achievement) {
+              const match = item.achievement.match(/\d+(\.\d+)?%/);
+              if (match) pct = match[0];
+            }
+
+            let exam = item.exam || item.achievement || "Achiever";
+            // Clean up exam title if needed
+            if (exam.startsWith(pct)) {
+              exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
+            }
+
+            const img = item.imageUrl || getFallbackImage(item.name) || img12_angel;
+
+            return {
+              name: item.name,
+              exam: exam || "2025-26",
+              pct: pct || "95.00%",
+              avatar: img,
+              poster: img,
+            };
+          });
+          setAchievers(mappedData);
+        }
       })
       .catch(console.error);
   }, []);
 
-  const top12 =
-    achievers.length > 0
-      ? achievers.filter((a) => a.exam.includes("XII")).slice(0, 5)
-      : CLASS12;
-  const top10 =
-    achievers.length > 0
-      ? achievers.filter((a) => a.exam.includes("X ·") || a.exam.includes("X ")).slice(0, 5)
-      : CLASS10;
+  const isClassXII = (examStr: string = "") =>
+    examStr.includes("XII") || examStr.includes("12") || examStr.includes("ISC");
+  
+  const isClassX = (examStr: string = "") =>
+    (examStr.includes("X") || examStr.includes("10") || examStr.includes("ICSE")) && !isClassXII(examStr);
+
+  const top12Filtered = achievers.filter((a) => isClassXII(a.exam));
+  const top10Filtered = achievers.filter((a) => isClassX(a.exam));
+
+  const top12 = top12Filtered.length > 0 ? top12Filtered.slice(0, 5) : CLASS12;
+  const top10 = top10Filtered.length > 0 ? top10Filtered.slice(0, 5) : CLASS10;
+
 
   return (
     <section className="screen-fit-section overflow-hidden bg-[color:var(--section)]">

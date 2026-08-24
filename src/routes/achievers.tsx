@@ -70,14 +70,30 @@ export const Route = createFileRoute("/achievers")({
       async function fetchData() {
         try {
           const data = await getAchievers();
-          const mappedData = data.map((item: any) => ({
-            ...item,
-            exam: item.achievement || item.exam || "Achiever",
-            pct: item.pct || "",
-            rank: item.rank || 999,
-            avatar: item.imageUrl || item.avatar || getFallbackImage(item.name),
-            poster: item.imageUrl || item.poster || getFallbackImage(item.name),
-          }));
+          const mappedData = data.map((item: any, index: number) => {
+            let pct = item.pct || "";
+            if (!pct && item.achievement) {
+              const match = item.achievement.match(/\d+(\.\d+)?%/);
+              if (match) pct = match[0];
+            }
+
+            let exam = item.exam || item.achievement || "Achiever";
+            if (exam.startsWith(pct)) {
+              exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
+            }
+
+            const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || img12_angel;
+
+            return {
+              ...item,
+              name: item.name,
+              exam: exam || "2025-26",
+              pct: pct || "95.00%",
+              rank: item.rank || index + 1,
+              avatar: img,
+              poster: img,
+            };
+          });
           setAchievers(mappedData);
         } catch (e) {
           console.error("Error fetching achievers:", e);

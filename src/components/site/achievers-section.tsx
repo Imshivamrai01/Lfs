@@ -1141,8 +1141,13 @@ export function AchieversSection({ data }: { data?: Achiever[] }) {
 
   const achieversList = data && data.length > 0 ? data : ALL_ACHIEVERS;
 
+  const isXIIExam = (examStr: string = "") =>
+    examStr.includes("XII") || examStr.includes("12") || examStr.includes("ISC");
+  const isXExam = (examStr: string = "") =>
+    (examStr.includes("X") || examStr.includes("10") || examStr.includes("ICSE")) && !isXIIExam(examStr);
+
   const filtered = achieversList.filter((a) =>
-    filter === "all" ? true : a.exam.includes(filter === "XII" ? "XII" : "X ·"),
+    filter === "all" ? true : filter === "XII" ? isXIIExam(a.exam) : isXExam(a.exam),
   );
   const rankMap = computeRanks(filtered);
 
