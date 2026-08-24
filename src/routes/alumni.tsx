@@ -107,7 +107,19 @@ const NOTABLE_ALUMNI = [
   },
 ];
 
-const BATCH_OPTION/* ─── Form Input Component ─────────────────────────────────────────── */
+const BATCH_OPTIONS = [
+  "Before 1990",
+  "1990–1995",
+  "1996–2000",
+  "2001–2005",
+  "2006–2010",
+  "2011–2015",
+  "2016–2020",
+  "2021–2025",
+  "2025–2026",
+];
+
+/* ─── Form Input Component ─────────────────────────────────────────── */
 
 function FormField({
   label,
