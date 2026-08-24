@@ -3,23 +3,30 @@ import mongoose, { Schema, Document } from "mongoose";
 // --- Alumni Schema ---
 export interface IAlumni extends Document {
   name: string;
+  email?: string;
+  phone?: string;
   batchYear: string;
   currentRole: string;
-  company: string;
-  message: string;
+  company?: string;
+  city?: string;
+  message?: string;
   imageUrl?: string;
   linkedinUrl?: string;
 }
 
 const AlumniSchema: Schema = new Schema({
   name: { type: String, required: true },
+  email: { type: String },
+  phone: { type: String },
   batchYear: { type: String, required: true },
-  currentRole: { type: String, required: true },
-  company: { type: String, required: true },
-  message: { type: String, required: true },
+  currentRole: { type: String, default: "Alumnus" },
+  company: { type: String, default: "" },
+  city: { type: String, default: "" },
+  message: { type: String, default: "" },
   imageUrl: { type: String },
   linkedinUrl: { type: String },
 });
+
 
 // --- Achievers Schema ---
 export interface IAchiever extends Document {

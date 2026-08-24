@@ -32,9 +32,29 @@ export const loginAdmin = createServerFn({ method: 'POST' })
 export const getAlumni = createServerFn({ method: 'GET' })
   .handler(async () => {
     await connectToDatabase();
-    const alumni = await AlumniModel.find().lean();
+    const alumni = await AlumniModel.find().sort({ _id: -1 }).lean();
     return alumni.map(a => ({ ...a, _id: a._id?.toString() }));
   });
+
+export const registerAlumni = createServerFn({ method: 'POST' })
+  .validator((data: any) => data)
+  .handler(async ({ data }) => {
+    await connectToDatabase();
+    const newAlumni = await AlumniModel.create({
+      name: data.name,
+      email: data.email || '',
+      phone: data.phone || '',
+      batchYear: data.batchYear || 'Alumnus',
+      currentRole: data.currentRole || 'Alumnus',
+      company: data.company || '',
+      city: data.city || '',
+      message: data.message || '',
+      linkedinUrl: data.linkedinUrl || '',
+      imageUrl: data.imageUrl || '',
+    });
+    return { success: true, id: newAlumni._id.toString() };
+  });
+
 
 export const getAchievers = createServerFn({ method: 'GET' })
   .handler(async () => {

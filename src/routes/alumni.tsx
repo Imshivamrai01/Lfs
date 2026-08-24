@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/site/page-header";
 import { Reveal, SectionEyebrow } from "@/components/site/reveal";
 import { CTA } from "@/components/home/cta";
-import { getAlumni } from "@/api/functions";
+import { getAlumni, registerAlumni } from "@/api/functions";
+
 import {
   GraduationCap,
   MapPin,
@@ -106,30 +107,23 @@ const NOTABLE_ALUMNI = [
   },
 ];
 
-const BATCH_OPTIONS = [
-  "Before 1990",
-  "1990–1995",
-  "1996–2000",
-  "2001–2005",
-  "2006–2010",
-  "2011–2015",
-  "2016–2020",
-  "2021–2025",
-];
-
-/* ─── Form Input Component ─────────────────────────────────────────── */
+const BATCH_OPTION/* ─── Form Input Component ─────────────────────────────────────────── */
 
 function FormField({
   label,
   type = "text",
   placeholder,
   required = false,
+  value,
+  onChange,
   children,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
   required?: boolean;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   children?: React.ReactNode;
 }) {
   return (
@@ -145,6 +139,8 @@ function FormField({
           type={type}
           placeholder={placeholder}
           required={required}
+          value={value}
+          onChange={onChange}
           className="mt-2 w-full rounded-2xl border-2 border-transparent bg-slate-50 px-5 py-4 text-sm text-[color:var(--ink)] outline-none transition-all placeholder:text-slate-400 focus:border-[color:var(--navy)] focus:bg-white focus:shadow-[0_4px_20px_rgba(11,77,162,0.08)]"
         />
       )}
@@ -179,7 +175,19 @@ function AlumniPage() {
   const [submitting, setSubmitting] = useState(false);
   const [alumniList, setAlumniList] = useState<any[]>(NOTABLE_ALUMNI);
 
-  useEffect(() => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    batchYear: "",
+    currentRole: "",
+    company: "",
+    city: "",
+    linkedinUrl: "",
+    message: "",
+  });
+
+  const loadAlumni = () => {
     getAlumni()
       .then((data) => {
         if (data && data.length > 0) {
@@ -203,15 +211,35 @@ function AlumniPage() {
         console.error("Error loading alumni:", err);
         setAlumniList(NOTABLE_ALUMNI);
       });
+  };
+
+  useEffect(() => {
+    loadAlumni();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      await registerAlumni({ data: formData });
       setSubmitted(true);
-    }, 1500);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        batchYear: "",
+        currentRole: "",
+        company: "",
+        city: "",
+        linkedinUrl: "",
+        message: "",
+      });
+      loadAlumni();
+    } catch (err: any) {
+      alert("Error submitting registration: " + (err.message || err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -343,7 +371,6 @@ function AlumniPage() {
         </div>
       </section>
 
-
       {/* ── Why Stay Connected ─────────────────────────────────────── */}
       <section className="screen-fit-section-large bg-[color:var(--section)]">
         <div className="container-page">
@@ -428,7 +455,7 @@ function AlumniPage() {
               <Reveal delay={0.1}>
                 <p className="mx-auto mt-4 max-w-xl text-[color:var(--ink-muted)]">
                   Fill the form below to join the official Little Flower School Alumni Network. Your
-                  details will be verified before your profile is published.
+                  details will be saved directly to the database.
                 </p>
               </Reveal>
             </div>
@@ -444,8 +471,7 @@ function AlumniPage() {
                     Registration Submitted!
                   </h3>
                   <p className="mx-auto mt-3 max-w-md text-[color:var(--ink-muted)]">
-                    Thank you for registering. Our team will verify your details and your alumni
-                    profile will be live soon. You will receive a confirmation email shortly.
+                    Thank you for registering. Your details have been recorded and your profile will be featured in our alumni network.
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
@@ -476,12 +502,20 @@ function AlumniPage() {
                     <div className="mt-8 grid gap-6">
                       {/* Row 1: Name */}
                       <div className="grid gap-6 sm:grid-cols-2">
-                        <FormField label="Full Name" placeholder="Your full name" required />
+                        <FormField
+                          label="Full Name"
+                          placeholder="Your full name"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
                         <FormField
                           label="Email Address"
                           type="email"
                           placeholder="you@email.com"
                           required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
                       </div>
 
@@ -491,13 +525,15 @@ function AlumniPage() {
                           label="Phone Number"
                           type="tel"
                           placeholder="+91 98765 43210"
-                          required
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         />
                         <FormField label="Passing Batch" required>
                           <select
                             required
                             className="mt-2 w-full appearance-none rounded-2xl border-2 border-transparent bg-slate-50 px-5 py-4 text-sm text-[color:var(--ink)] outline-none transition-all focus:border-[color:var(--navy)] focus:bg-white focus:shadow-[0_4px_20px_rgba(11,77,162,0.08)]"
-                            defaultValue=""
+                            value={formData.batchYear}
+                            onChange={(e) => setFormData({ ...formData, batchYear: e.target.value })}
                           >
                             <option value="" disabled>
                               Select your batch
@@ -523,17 +559,31 @@ function AlumniPage() {
                         <FormField
                           label="Current Profession"
                           placeholder="e.g. Software Engineer"
+                          value={formData.currentRole}
+                          onChange={(e) => setFormData({ ...formData, currentRole: e.target.value })}
                         />
-                        <FormField label="Organization / Company" placeholder="e.g. Google India" />
+                        <FormField
+                          label="Organization / Company"
+                          placeholder="e.g. Google India"
+                          value={formData.company}
+                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                        />
                       </div>
 
                       {/* Row 4: City */}
                       <div className="grid gap-6 sm:grid-cols-2">
-                        <FormField label="Current City" placeholder="e.g. Bangalore" />
+                        <FormField
+                          label="Current City"
+                          placeholder="e.g. Bangalore"
+                          value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        />
                         <FormField
                           label="LinkedIn Profile"
                           type="url"
                           placeholder="https://linkedin.com/in/..."
+                          value={formData.linkedinUrl}
+                          onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
                         />
                       </div>
 
@@ -542,6 +592,8 @@ function AlumniPage() {
                         <textarea
                           rows={4}
                           placeholder="Share a memory, achievement or message for the current students..."
+                          value={formData.message}
+                          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                           className="mt-2 w-full resize-none rounded-2xl border-2 border-transparent bg-slate-50 px-5 py-4 text-sm text-[color:var(--ink)] outline-none transition-all placeholder:text-slate-400 focus:border-[color:var(--navy)] focus:bg-white focus:shadow-[0_4px_20px_rgba(11,77,162,0.08)]"
                         />
                       </FormField>
@@ -583,3 +635,4 @@ function AlumniPage() {
     </>
   );
 }
+
