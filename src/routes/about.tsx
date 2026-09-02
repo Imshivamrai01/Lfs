@@ -145,7 +145,7 @@ function AboutPage() {
         const mapped = res.map((m) => ({
           name: m.name,
           role: m.role,
-          details: m.details,
+          details: m.details || m.message || '',
           image: m.imageUrl || FALLBACK_MANAGEMENT[m.name] || sabuImg,
           initials: m.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
         }));

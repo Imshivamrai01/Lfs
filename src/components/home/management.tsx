@@ -49,6 +49,7 @@ export function Management() {
       if (res && res.length > 0) {
         const mapped = res.map((m) => ({
           ...m,
+          details: m.details || m.message || '',
           image: m.imageUrl || FALLBACK_MANAGEMENT[m.name] || sabuImg,
         }));
         setMembers(mapped);

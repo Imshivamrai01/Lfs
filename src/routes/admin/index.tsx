@@ -2,8 +2,8 @@ import { createFileRoute, useRouterState } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { runMigration } from '../../api/migrate';
 import { getManagement, getAchievers, getAlumni, getEvents, getAlbums, getPhotosByAlbum, getExamSchedules, getExamResults, getExamNotices, getExamGuidelines, getPopups } from '../../api/functions';
-import { deleteDocument, updateDocument, createDocument, getDashboardStats } from '../../api/admin';
-import { Plus, Trash2, Edit2, Loader2, X, Users, Award, GraduationCap, CalendarDays, ImageIcon, ChevronLeft, ImagePlus, Megaphone, Eye, ExternalLink, Sparkles, Check, Power } from 'lucide-react';
+import { deleteDocument, updateDocument, createDocument, createPhotos, getDashboardStats } from '../../api/admin';
+import { Plus, Trash2, Edit2, Loader2, X, Users, Award, GraduationCap, CalendarDays, ImageIcon, ChevronLeft, ImagePlus, Megaphone, Eye, ExternalLink, Sparkles, Check, Power, UploadCloud, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
@@ -17,7 +17,7 @@ function AdminDashboard() {
     <div className="max-w-6xl mx-auto space-y-6">
       {currentTab === 'dashboard' && <DashboardTab />}
       {currentTab === 'popup' && <PopupTab />}
-      {currentTab === 'management' && <CrudTab title="Management" modelName="Management" fetchData={getManagement} defaultState={{ name: '', role: '', details: '', imageUrl: '' }} />}
+      {currentTab === 'management' && <CrudTab title="Management" modelName="Management" fetchData={getManagement} defaultState={{ name: '', role: '', details: '', imageUrl: '', order: 0 }} />}
       {currentTab === 'achievers' && <CrudTab title="Achievers" modelName="Achiever" fetchData={getAchievers} defaultState={{ name: '', batchYear: '', achievement: '', exam: '', pct: '', rank: 99, category: 'Academic', imageUrl: '' }} />}
       {currentTab === 'alumni' && <CrudTab title="Alumni" modelName="Alumni" fetchData={getAlumni} defaultState={{ name: '', batchYear: '', currentRole: '', company: '', message: '', imageUrl: '', linkedinUrl: '' }} />}
       {currentTab === 'events' && <CrudTab title="Events & Notices" modelName="Event" fetchData={getEvents} defaultState={{ title: '', date: new Date().toISOString().split('T')[0], description: '', location: '', coverImage: '', isImportant: false }} />}
@@ -68,6 +68,12 @@ function DashboardTab() {
         <StatCard title="Gallery Albums" value={stats?.albums ?? '-'} icon={ImageIcon} color="from-emerald-500 to-emerald-600" />
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <StatCard title="Exam Schedules" value={stats?.examSchedules ?? '-'} icon={CalendarDays} color="from-indigo-500 to-indigo-600" />
+        <StatCard title="Exam Results" value={stats?.examResults ?? '-'} icon={Award} color="from-teal-500 to-teal-600" />
+        <StatCard title="Exam Notices" value={stats?.examNotices ?? '-'} icon={Megaphone} color="from-rose-500 to-rose-600" />
+      </div>
+
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-yellow-200/60 mt-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-full opacity-50 blur-3xl pointer-events-none" />
         <h3 className="text-xl font-bold text-yellow-900 mb-2 relative z-10">System Tools: Data Migration</h3>
@@ -114,6 +120,8 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
   const [formData, setFormData] = useState<any>(defaultState);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [manageAlbum, setManageAlbum] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const loadData = () => {
     setLoading(true);
@@ -133,9 +141,20 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
 
   const openEdit = (record: any) => {
     setEditingId(record._id);
+    setFormError(null);
     const formValues = { ...defaultState };
     Object.keys(defaultState).forEach(k => {
-      if (record[k] !== undefined) formValues[k] = record[k];
+      if (record[k] !== undefined) {
+        if (k === 'date' && (modelName === 'Event' || modelName === 'ExamNotice')) {
+          try {
+            formValues[k] = new Date(record[k]).toISOString().split('T')[0];
+          } catch {
+            formValues[k] = record[k];
+          }
+        } else {
+          formValues[k] = record[k];
+        }
+      }
     });
     setFormData(formValues);
     setModalOpen(true);
@@ -143,19 +162,29 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
 
   const openCreate = () => {
     setEditingId(null);
+    setFormError(null);
     setFormData(defaultState);
     setModalOpen(true);
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (editingId) {
-      await updateDocument({ data: { modelName, id: editingId, updateData: formData }});
-    } else {
-      await createDocument({ data: { modelName, createData: formData }});
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      if (editingId) {
+        await updateDocument({ data: { modelName, id: editingId, updateData: formData }});
+      } else {
+        await createDocument({ data: { modelName, createData: formData }});
+      }
+      setModalOpen(false);
+      loadData();
+    } catch (err: any) {
+      console.error("Save error:", err);
+      setFormError(err?.message || "Failed to save. Please make sure all required fields are filled.");
+    } finally {
+      setSubmitting(false);
     }
-    setModalOpen(false);
-    loadData();
   };
 
   const handleFileUpload = async (e: any, field: string) => {
@@ -165,13 +194,13 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
     setUploadingField(field);
     const formDataUpload = new FormData();
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dulns8qug';
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'lfs_preset';
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'lfssalempur';
 
     formDataUpload.append('file', file);
     formDataUpload.append('upload_preset', uploadPreset);
   
     try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
         method: 'POST',
         body: formDataUpload,
       });
@@ -182,7 +211,7 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
         alert("Failed to upload: " + (data.error?.message || "Unknown error"));
       }
     } catch (err) {
-      alert("Error uploading file. Make sure 'lfs_preset' is created as an Unsigned Upload Preset in your Cloudinary account.");
+      alert("Error uploading file. Make sure 'lfssalempur' upload preset is configured.");
     } finally {
       setUploadingField(null);
     }
@@ -231,15 +260,44 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
                 <tr key={row._id} className="hover:bg-gray-50/50 transition-colors">
                   {columns.map(c => {
                     const isMedia = c.toLowerCase().includes('image') || c.toLowerCase().includes('video') || c.toLowerCase().includes('cover');
+                    const isFile = c.toLowerCase().includes('file') || c.toLowerCase().includes('pdf') || c.toLowerCase().includes('doc');
                     const isVideo = row[c] && typeof row[c] === 'string' && row[c].match(/\.(mp4|webm)$/i);
                     return (
-                      <td key={c} className="p-4 max-w-[200px] truncate text-ellipsis overflow-hidden">
+                      <td key={c} className="p-4 max-w-[220px] truncate text-ellipsis overflow-hidden">
                         {isMedia && row[c] ? (
                           isVideo ? (
                             <video src={row[c]} className="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-200" />
                           ) : (
                             <img src={row[c]} alt="thumbnail" className="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-200" />
                           )
+                        ) : isFile && row[c] ? (
+                          <a href={row[c]} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-colors">
+                            <ExternalLink size={12} /> View File
+                          </a>
+                        ) : c === 'status' ? (
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            row[c] === 'upcoming' 
+                              ? 'bg-amber-100 text-amber-800' 
+                              : row[c] === 'ongoing' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {row[c] === 'upcoming' ? 'Upcoming' : row[c] === 'ongoing' ? 'Ongoing' : 'Completed'}
+                          </span>
+                        ) : c === 'type' && modelName === 'ExamNotice' ? (
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            row[c] === 'Important' 
+                              ? 'bg-red-100 text-red-800' 
+                              : row[c] === 'Result' 
+                                ? 'bg-emerald-100 text-emerald-800' 
+                                : row[c] === 'Schedule'
+                                  ? 'bg-indigo-100 text-indigo-800'
+                                  : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {row[c]}
+                          </span>
+                        ) : c === 'date' && (modelName === 'ExamNotice' || modelName === 'Event') && row[c] ? (
+                          new Date(row[c]).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                         ) : (
                           String(row[c] || '')
                         )}
@@ -270,6 +328,15 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
               <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 custom-scrollbar">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2.5">
+                  <AlertCircle className="shrink-0 mt-0.5 text-red-500" size={18} />
+                  <div>
+                    <p className="font-semibold">Error saving record</p>
+                    <p className="text-xs text-red-600 mt-0.5">{formError}</p>
+                  </div>
+                </div>
+              )}
               {modelName === 'Album' && (
                 <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-emerald-800 text-sm flex gap-3">
                   <ImagePlus className="shrink-0 mt-0.5" size={18} />
@@ -278,6 +345,7 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
               )}
               {columns.map(c => {
                 const isMedia = c.toLowerCase().includes('image') || c.toLowerCase().includes('video') || c.toLowerCase().includes('cover');
+                const isFile = c.toLowerCase().includes('file') || c.toLowerCase().includes('pdf') || c.toLowerCase().includes('doc');
                 const isVideo = formData[c] && typeof formData[c] === 'string' && formData[c].match(/\.(mp4|webm)$/i);
                 
                 return (
@@ -288,6 +356,27 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
                         <input type="checkbox" className="sr-only peer" checked={formData[c]} onChange={(e) => setFormData({...formData, [c]: e.target.checked})} />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
+                    ) : c === 'status' && modelName === 'ExamSchedule' ? (
+                      <select
+                        value={formData[c] || 'upcoming'}
+                        onChange={(e) => setFormData({...formData, [c]: e.target.value})}
+                        className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all shadow-sm text-sm bg-white"
+                      >
+                        <option value="upcoming">Upcoming</option>
+                        <option value="ongoing">Ongoing</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    ) : c === 'type' && modelName === 'ExamNotice' ? (
+                      <select
+                        value={formData[c] || 'General'}
+                        onChange={(e) => setFormData({...formData, [c]: e.target.value})}
+                        className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all shadow-sm text-sm bg-white"
+                      >
+                        <option value="General">General</option>
+                        <option value="Important">Important</option>
+                        <option value="Schedule">Schedule</option>
+                        <option value="Result">Result</option>
+                      </select>
                     ) : isMedia ? (
                       <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                         {formData[c] && (
@@ -323,11 +412,58 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
                           />
                         </div>
                       </div>
+                    ) : isFile ? (
+                      <div className="space-y-3 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                        {formData[c] && (
+                          <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <span className="text-xs text-gray-600 truncate max-w-[280px]">{formData[c]}</span>
+                            <a href={formData[c]} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center gap-1">
+                              <ExternalLink size={12} /> Test Link
+                            </a>
+                          </div>
+                        )}
+                        <div className="flex gap-3 items-center">
+                          <label className="cursor-pointer relative overflow-hidden bg-white border border-gray-200 text-sm font-medium text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm inline-block">
+                            {uploadingField === c ? 'Uploading PDF...' : 'Upload PDF / Result Document'}
+                            <input 
+                              type="file" 
+                              accept=".pdf,.doc,.docx,application/pdf,image/*"
+                              onChange={(e) => handleFileUpload(e, c)}
+                              disabled={uploadingField === c}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                            />
+                          </label>
+                          {uploadingField === c && <Loader2 className="animate-spin text-blue-600" size={20} />}
+                        </div>
+                        <div className="pt-2 border-t border-gray-200/60">
+                          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Or Direct Link (Google Drive / Cloudinary / Web)</p>
+                          <input 
+                            type="text" 
+                            placeholder="https://... (URL to result PDF)"
+                            value={formData[c] || ''} 
+                            onChange={(e) => setFormData({...formData, [c]: e.target.value})}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all bg-white"
+                          />
+                        </div>
+                      </div>
                     ) : (
                       <input 
-                        type={c === 'date' ? 'date' : 'text'} 
-                        value={formData[c] || ''} 
-                        onChange={(e) => setFormData({...formData, [c]: e.target.value})}
+                        type={
+                          c === 'date' && (modelName === 'Event' || modelName === 'ExamNotice')
+                            ? 'date' 
+                            : c === 'order' || c === 'rank' 
+                              ? 'number' 
+                              : 'text'
+                        } 
+                        placeholder={
+                          c === 'date' && modelName === 'ExamSchedule' 
+                            ? 'e.g. 15 Jul – 22 Jul 2026' 
+                            : c === 'date' && modelName === 'ExamResult'
+                              ? 'e.g. March 2026 or May 2026'
+                              : ''
+                        }
+                        value={formData[c] ?? ''} 
+                        onChange={(e) => setFormData({...formData, [c]: c === 'order' || c === 'rank' ? Number(e.target.value) : e.target.value})}
                         className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all shadow-sm text-sm"
                       />
                     )}
@@ -336,7 +472,10 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
               })}
               <div className="pt-6 pb-2 flex justify-end gap-3 sticky bottom-0 bg-white">
                 <button type="button" onClick={() => setModalOpen(false)} className="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold text-sm transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30">Save Changes</button>
+                <button type="submit" disabled={submitting} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-semibold text-sm shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30 flex items-center gap-2">
+                  {submitting && <Loader2 className="animate-spin" size={16} />}
+                  {submitting ? 'Saving...' : 'Save Changes'}
+                </button>
               </div>
             </form>
           </div>
@@ -350,6 +489,9 @@ function AlbumPhotosManager({ album, onBack }: { album: any, onBack: () => void 
   const [photos, setPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number; percentage: number }>({ current: 0, total: 0, percentage: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const loadPhotos = async () => {
     setLoading(true);
@@ -357,83 +499,261 @@ function AlbumPhotosManager({ album, onBack }: { album: any, onBack: () => void 
       const res = await getPhotosByAlbum({ data: album._id });
       setPhotos(res || []);
     } catch(e) {
-      console.error(e);
+      console.error("Failed to load album photos:", e);
     }
     setLoading(false);
   };
 
   useEffect(() => { loadPhotos(); }, [album._id]);
 
-  const handleUpload = async (e: any) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processFiles = async (fileList: FileList | File[]) => {
+    const rawFiles = Array.from(fileList);
+    const validImageFiles = rawFiles.filter(f => f.type.startsWith('image/'));
+    
+    if (validImageFiles.length === 0) {
+      alert("Please select valid image files (JPG, PNG, WEBP, etc.)");
+      return;
+    }
+
     setUploading(true);
+    setStatusMessage(null);
+    setUploadProgress({ current: 0, total: validImageFiles.length, percentage: 0 });
+
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dulns8qug';
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'lfs_preset';
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
-    try {
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-        method: 'POST', body: formData
-      });
-      const data = await res.json();
-      if (data.secure_url) {
-        await createDocument({ data: { modelName: 'Photo', createData: { albumId: album._id, imageUrl: data.secure_url, caption: '' } } });
-        loadPhotos();
-      } else {
-        alert("Upload failed: " + (data.error?.message || ""));
-      }
-    } catch(err) {
-      alert("Upload error. Make sure 'lfs_preset' is created as an Unsigned Upload Preset in your Cloudinary account.");
+
+    const uploadedUrls: string[] = [];
+    let completedCount = 0;
+
+    // Upload in batches of 3 concurrently for fast and reliable performance
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < validImageFiles.length; i += BATCH_SIZE) {
+      const batch = validImageFiles.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', uploadPreset);
+
+          try {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+            if (data.secure_url) {
+              uploadedUrls.push(data.secure_url);
+            } else {
+              console.error(`Upload error for ${file.name}:`, data.error);
+            }
+          } catch (err) {
+            console.error(`Failed to upload ${file.name}:`, err);
+          } finally {
+            completedCount++;
+            setUploadProgress({
+              current: completedCount,
+              total: validImageFiles.length,
+              percentage: Math.round((completedCount / validImageFiles.length) * 100)
+            });
+          }
+        })
+      );
     }
+
+    if (uploadedUrls.length > 0) {
+      try {
+        await createPhotos({
+          data: {
+            albumId: album._id,
+            photos: uploadedUrls.map(url => ({ imageUrl: url, caption: '' }))
+          }
+        });
+        setStatusMessage({
+          text: `Successfully uploaded and saved ${uploadedUrls.length} photo(s)!`,
+          type: 'success'
+        });
+        loadPhotos();
+      } catch (err: any) {
+        console.error("Error saving photos to database:", err);
+        setStatusMessage({
+          text: "Photos uploaded to cloud but failed to save to database. " + (err?.message || ''),
+          type: 'error'
+        });
+      }
+    } else {
+      setStatusMessage({
+        text: "Could not upload images. Please verify your Cloudinary upload preset.",
+        type: 'error'
+      });
+    }
+
     setUploading(false);
   };
 
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
+      e.target.value = ''; // Reset input so same files can be re-selected if needed
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
+    }
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this photo?')) return;
+    if (!confirm('Delete this photo from album?')) return;
     await deleteDocument({ data: { modelName: 'Photo', id } });
     loadPhotos();
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={onBack} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"><ChevronLeft size={20} /></button>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Manage Photos: {album.title}</h2>
-          <p className="text-gray-500 mt-1">Upload and delete photos for this album.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors shadow-sm text-gray-700">
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-900">{album.title}</h2>
+              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 font-semibold text-xs rounded-full border border-blue-200/60">
+                {photos.length} photos
+              </span>
+            </div>
+            <p className="text-gray-500 text-sm mt-0.5">Select and upload multiple photos at once for this gallery album.</p>
+          </div>
+        </div>
+
+        <label className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2 text-sm font-medium transition-all shadow-md shadow-blue-500/20 shrink-0">
+          {uploading ? <Loader2 className="animate-spin" size={16} /> : <UploadCloud size={18} />}
+          {uploading ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...` : 'Select Multiple Photos'}
+          <input 
+            type="file" 
+            accept="image/*" 
+            multiple 
+            className="hidden" 
+            onChange={handleFileInputChange} 
+            disabled={uploading} 
+          />
+        </label>
+      </div>
+
+      {/* Drag & Drop Upload Box */}
+      <div 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+          isDragging 
+            ? 'border-blue-500 bg-blue-50/60 ring-4 ring-blue-500/10 scale-[0.99]' 
+            : 'border-gray-300 hover:border-gray-400 bg-white/70 shadow-sm'
+        }`}
+      >
+        <div className="max-w-md mx-auto flex flex-col items-center">
+          <div className={`p-3.5 rounded-2xl mb-3 transition-colors ${isDragging ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600'}`}>
+            <UploadCloud size={28} />
+          </div>
+          <h3 className="font-bold text-gray-900 text-base">Drag & Drop multiple images here</h3>
+          <p className="text-gray-500 text-xs mt-1 mb-4">
+            Upload single or bulk photos at once (JPG, PNG, WebP). Max 10MB per file.
+          </p>
+          <label className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-xl text-xs cursor-pointer shadow-sm transition-colors">
+            Browse Files on Computer
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              className="hidden" 
+              onChange={handleFileInputChange} 
+              disabled={uploading} 
+            />
+          </label>
         </div>
       </div>
+
+      {/* Upload Progress Card */}
+      {uploading && (
+        <div className="bg-blue-50/90 border border-blue-200 p-5 rounded-2xl shadow-sm space-y-3">
+          <div className="flex justify-between items-center text-sm font-semibold text-blue-900">
+            <div className="flex items-center gap-2">
+              <Loader2 className="animate-spin text-blue-600" size={18} />
+              <span>Uploading images to cloud... ({uploadProgress.current} / {uploadProgress.total} completed)</span>
+            </div>
+            <span className="text-blue-700 font-bold">{uploadProgress.percentage}%</span>
+          </div>
+          <div className="w-full h-3 bg-blue-100 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 rounded-full"
+              style={{ width: `${uploadProgress.percentage}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Status Alert Banner */}
+      {statusMessage && (
+        <div className={`p-4 rounded-xl text-sm font-medium flex items-center justify-between gap-3 ${
+          statusMessage.type === 'success' 
+            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            {statusMessage.type === 'success' ? <CheckCircle2 size={18} className="text-emerald-600 shrink-0" /> : <AlertCircle size={18} className="text-red-600 shrink-0" />}
+            <span>{statusMessage.text}</span>
+          </div>
+          <button onClick={() => setStatusMessage(null)} className="text-gray-400 hover:text-gray-600">
+            <X size={16} />
+          </button>
+        </div>
+      )}
       
+      {/* Photos Grid */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="mb-6 flex justify-between items-center">
-           <h3 className="text-lg font-semibold">Album Photos</h3>
-           <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl cursor-pointer flex items-center gap-2 text-sm font-medium transition-colors shadow-md shadow-blue-500/20">
-             {uploading ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
-             {uploading ? 'Uploading...' : 'Upload Photo'}
-             <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-           </label>
+        <div className="mb-5 flex justify-between items-center">
+           <h3 className="text-lg font-bold text-gray-900">Album Photos ({photos.length})</h3>
         </div>
         
         {loading ? (
-          <div className="p-12 text-center text-gray-400 flex flex-col items-center">
-            <Loader2 className="animate-spin mb-3" size={24} />
-            <p>Loading photos...</p>
+          <div className="p-16 text-center text-gray-400 flex flex-col items-center">
+            <Loader2 className="animate-spin mb-3 text-blue-500" size={28} />
+            <p className="text-sm font-medium">Loading photos...</p>
           </div>
         ) : photos.length === 0 ? (
-          <div className="p-16 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            <p className="font-medium text-sm tracking-wide uppercase mb-3">No photos in this album</p>
-            <p className="text-sm">Click the upload button above to add photos.</p>
+          <div className="p-16 text-center text-gray-400 bg-gray-50/70 rounded-2xl border border-dashed border-gray-200">
+            <ImageIcon className="mx-auto mb-3 text-gray-300" size={40} />
+            <p className="font-semibold text-sm text-gray-600 mb-1">No photos in this album yet</p>
+            <p className="text-xs text-gray-400">Drag & drop photos above or use the "Select Multiple Photos" button.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {photos.map(p => (
-              <div key={p._id} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 bg-gray-50">
-                <img src={p.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <button onClick={() => handleDelete(p._id)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 hover:scale-110 shadow-xl">
-                  <Trash2 size={18} />
+              <div key={p._id} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 bg-gray-50 shadow-sm">
+                <img src={p.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                <button 
+                  onClick={() => handleDelete(p._id)} 
+                  title="Delete Photo"
+                  className="absolute bottom-2.5 right-2.5 bg-red-500 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600 hover:scale-105 shadow-md"
+                >
+                  <Trash2 size={15} />
                 </button>
               </div>
             ))}

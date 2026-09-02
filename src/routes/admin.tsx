@@ -82,15 +82,17 @@ function AdminLayout() {
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
-            const itemKey = item.name.toLowerCase().replace(' ', '-');
-            const isActive = (itemKey === 'dashboard' && currentTab === 'dashboard') || currentTab === itemKey;
+            const itemTab = item.path.includes('tab=') 
+              ? new URLSearchParams(item.path.split('?')[1]).get('tab') 
+              : 'dashboard';
+            const isActive = currentTab === itemTab;
             return (
               <Link
                 key={item.name}
                 to={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive 
-                    ? 'bg-blue-50 text-blue-700' 
+                    ? 'bg-blue-50 text-blue-700 font-semibold' 
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >

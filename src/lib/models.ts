@@ -100,18 +100,20 @@ const PhotoSchema: Schema = new Schema({
 
 // --- Management Schema ---
 export interface IManagement extends Document {
-  role: "Principal" | "Manager" | "Staff";
+  role?: string;
   name: string;
-  message: string;
+  details?: string;
+  message?: string;
   imageUrl?: string;
-  order: number;
+  order?: number;
 }
 
 const ManagementSchema: Schema = new Schema({
-  role: { type: String, required: true },
   name: { type: String, required: true },
-  message: { type: String, required: true },
-  imageUrl: { type: String },
+  role: { type: String, default: "Management" },
+  details: { type: String, default: "" },
+  message: { type: String, default: "" },
+  imageUrl: { type: String, default: "" },
   order: { type: Number, default: 0 },
 });
 
@@ -194,8 +196,10 @@ export const AlumniModel = mongoose.models.Alumni || mongoose.model<IAlumni>("Al
 export const AchieverModel = mongoose.models.Achiever || mongoose.model<IAchiever>("Achiever", AchieverSchema);
 export const EventModel = mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema);
 export const AlbumModel = mongoose.models.Album || mongoose.model<IAlbum>("Album", AlbumSchema);
-export const PhotoModel = mongoose.models.Photo || mongoose.model<IPhoto>("Photo", PhotoSchema);
-export const ManagementModel = mongoose.models.Management || mongoose.model<IManagement>("Management", ManagementSchema);
+if (mongoose.models && mongoose.models.Management) {
+  delete (mongoose.models as any).Management;
+}
+export const ManagementModel = mongoose.models?.Management || mongoose.model<IManagement>("Management", ManagementSchema);
 export const ExamScheduleModel = mongoose.models.ExamSchedule || mongoose.model<IExamSchedule>("ExamSchedule", ExamScheduleSchema);
 export const ExamResultModel = mongoose.models.ExamResult || mongoose.model<IExamResult>("ExamResult", ExamResultSchema);
 export const ExamNoticeModel = mongoose.models.ExamNotice || mongoose.model<IExamNotice>("ExamNotice", ExamNoticeSchema);

@@ -5,9 +5,9 @@ export function PageLoader() {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    // Start fade-out after 1.8s, then unmount after 2.4s
-    const fadeTimer = setTimeout(() => setFadeOut(true), 1800);
-    const hideTimer = setTimeout(() => setVisible(false), 2500);
+    // Start fade-out after ~0.8s, then fully unmount at 1.25s (comfortably within 1-2s)
+    const fadeTimer = setTimeout(() => setFadeOut(true), 800);
+    const hideTimer = setTimeout(() => setVisible(false), 1250);
     return () => {
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);
@@ -29,7 +29,7 @@ export function PageLoader() {
         alignItems: "center",
         justifyContent: "center",
         background: "oklch(0.28 0.12 262)",
-        transition: "opacity 0.7s cubic-bezier(0.22,1,0.36,1)",
+        transition: "opacity 0.45s cubic-bezier(0.22,1,0.36,1)",
         opacity: fadeOut ? 0 : 1,
         pointerEvents: fadeOut ? "none" : "all",
       }}
@@ -42,7 +42,7 @@ export function PageLoader() {
           height: "340px",
           borderRadius: "50%",
           background: "radial-gradient(circle, oklch(0.82 0.15 82 / 0.18) 0%, transparent 70%)",
-          animation: "lfs-glow-expand 1.8s ease-out forwards",
+          animation: "lfs-glow-expand 0.8s ease-out forwards",
         }}
       />
 
@@ -54,7 +54,7 @@ export function PageLoader() {
           flexDirection: "column",
           alignItems: "center",
           gap: "1.5rem",
-          animation: "lfs-rise 0.9s cubic-bezier(0.22,1,0.36,1) forwards",
+          animation: "lfs-rise 0.45s cubic-bezier(0.22,1,0.36,1) forwards",
           opacity: 0,
         }}
       >
@@ -164,7 +164,7 @@ export function PageLoader() {
           textAlign: "center",
           padding: "0 1.5rem",
           maxWidth: "440px",
-          animation: "lfs-rise 1.2s cubic-bezier(0.22,1,0.36,1) 0.3s forwards",
+          animation: "lfs-rise 0.6s cubic-bezier(0.22,1,0.36,1) 0.15s forwards",
           opacity: 0,
         }}
       >

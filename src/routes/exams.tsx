@@ -154,20 +154,36 @@ function ExamsPage() {
   const [notices, setNotices] = useState<any[]>(NOTICES);
   const [guidelines, setGuidelines] = useState<any[]>(GUIDELINES);
 
+  const formatDate = (val: any) => {
+    if (!val) return '';
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   useEffect(() => {
-    getExamSchedules().then(res => { if (res && res.length > 0) setSchedules(res); }).catch(console.error);
-    getExamResults().then(res => { if (res && res.length > 0) setResults(res); }).catch(console.error);
-    getExamNotices().then(res => {
-      if (res && res.length > 0) {
-        // Formatting the date nicely
-        const formatted = res.map((n: any) => ({
-          ...n,
-          date: new Date(n.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-        }));
-        setNotices(formatted);
-      }
-    }).catch(console.error);
-    getExamGuidelines().then(res => { if (res && res.length > 0) setGuidelines(res.map((g: any) => g.text)); }).catch(console.error);
+    getExamSchedules()
+      .then(res => { if (res && res.length > 0) setSchedules(res); })
+      .catch(console.error);
+
+    getExamResults()
+      .then(res => { if (res && res.length > 0) setResults(res); })
+      .catch(console.error);
+
+    getExamNotices()
+      .then(res => {
+        if (res && res.length > 0) {
+          const formatted = res.map((n: any) => ({
+            ...n,
+            date: formatDate(n.date),
+          }));
+          setNotices(formatted);
+        }
+      })
+      .catch(console.error);
+
+    getExamGuidelines()
+      .then(res => { if (res && res.length > 0) setGuidelines(res.map((g: any) => g.text || g)); })
+      .catch(console.error);
   }, []);
 
   return (
@@ -222,7 +238,7 @@ function ExamsPage() {
             {/* Timeline */}
             <div className="relative border-l-2 border-[color:var(--border)] pl-8 sm:pl-12">
               {schedules.map((exam, i) => (
-                <Reveal key={exam.term + i} delay={i * 0.06} className="group relative mb-10 last:mb-0">
+                <Reveal key={(exam.term || '') + i} delay={i * 0.06} className="group relative mb-10 last:mb-0">
                   {/* Timeline dot */}
                   <span
                     className={`absolute -left-[calc(2rem+5px)] top-1.5 grid h-3 w-3 place-items-center rounded-full ring-4 ring-[color:var(--background)] sm:-left-[calc(3rem+5px)] ${
@@ -256,8 +272,10 @@ function ExamsPage() {
                       <span
                         className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
                           exam.status === "upcoming"
-                            ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)]"
-                            : "bg-[color:var(--section)] text-[color:var(--ink-muted)]"
+                            ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)] font-bold"
+                            : exam.status === "ongoing"
+                              ? "bg-blue-100 text-blue-800 font-bold"
+                              : "bg-[color:var(--section)] text-[color:var(--ink-muted)]"
                         }`}
                       >
                         {exam.status === "upcoming" ? "Upcoming" : exam.status === "ongoing" ? "Ongoing" : "Completed"}
@@ -297,9 +315,9 @@ function ExamsPage() {
               <div className="grid gap-3">
                 {results.map((r, i) => (
                   <Reveal
-                    key={r.title + i}
+                    key={(r.title || '') + i}
                     delay={i * 0.06}
-                    className="group flex items-center justify-between gap-4 rounded-2xl border border-[color:var(--border)] bg-white p-5 transition-all hover:border-[color:var(--navy)] hover:shadow-[var(--shadow-soft)]"
+                    className="group flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 rounded-2xl border border-[color:var(--border)] bg-white p-5 transition-all hover:border-[color:var(--navy)] hover:shadow-[var(--shadow-soft)]"
                   >
                     <div className="flex items-start gap-4">
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--navy)] text-[color:var(--gold)]">
@@ -315,11 +333,18 @@ function ExamsPage() {
                       </div>
                     </div>
                     {r.fileUrl ? (
-                      <a href={r.fileUrl} target="_blank" rel="noreferrer" className="shrink-0 p-2">
-                        <Download className="h-4 w-4 shrink-0 text-[color:var(--navy)] transition-all group-hover:translate-y-0.5" />
+                      <a 
+                        href={r.fileUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--navy)] hover:bg-[color:var(--navy-deep)] text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all shrink-0 hover:scale-[1.02]"
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download PDF
                       </a>
                     ) : (
-                      <Download className="h-4 w-4 shrink-0 text-[color:var(--navy)] opacity-0 transition-all group-hover:opacity-100 group-hover:translate-y-0.5" />
+                      <span className="text-xs font-medium text-[color:var(--ink-muted)] shrink-0 bg-[color:var(--section)] px-3 py-1.5 rounded-lg">
+                        Physical Card at PTM
+                      </span>
                     )}
                   </Reveal>
                 ))}
@@ -344,7 +369,7 @@ function ExamsPage() {
 
           <div className="mx-auto mt-14 max-w-3xl divide-y divide-[color:var(--border)] rounded-3xl border border-[color:var(--border)] bg-white shadow-[var(--shadow-soft)] overflow-hidden">
             {notices.map((n, i) => (
-              <Reveal key={n.title + i} delay={i * 0.05}>
+              <Reveal key={(n.title || '') + i} delay={i * 0.05}>
                 <div className="group flex items-center justify-between gap-4 px-6 py-5 transition-colors hover:bg-[color:var(--section)]">
                   <div className="flex items-center gap-4">
                     <div
@@ -365,9 +390,19 @@ function ExamsPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-display text-[15px] font-semibold text-[color:var(--ink)]">
-                        {n.title}
-                      </h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-display text-[15px] font-semibold text-[color:var(--ink)]">
+                          {n.title}
+                        </h3>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                          n.type === 'Important' ? 'bg-red-100 text-red-700' :
+                          n.type === 'Result' ? 'bg-emerald-100 text-emerald-700' :
+                          n.type === 'Schedule' ? 'bg-blue-100 text-blue-700' :
+                          'bg-amber-100 text-amber-800'
+                        }`}>
+                          {n.type || 'Notice'}
+                        </span>
+                      </div>
                       <p className="mt-0.5 text-xs text-[color:var(--ink-muted)]">{n.date}</p>
                     </div>
                   </div>
