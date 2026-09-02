@@ -196,6 +196,7 @@ export const AlumniModel = mongoose.models.Alumni || mongoose.model<IAlumni>("Al
 export const AchieverModel = mongoose.models.Achiever || mongoose.model<IAchiever>("Achiever", AchieverSchema);
 export const EventModel = mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema);
 export const AlbumModel = mongoose.models.Album || mongoose.model<IAlbum>("Album", AlbumSchema);
+export const PhotoModel = mongoose.models.Photo || mongoose.model<IPhoto>("Photo", PhotoSchema);
 if (mongoose.models && mongoose.models.Management) {
   delete (mongoose.models as any).Management;
 }
