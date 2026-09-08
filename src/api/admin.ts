@@ -27,7 +27,7 @@ const getModel = (modelName: string) => {
     case 'ExamNotice': return ExamNoticeModel;
     case 'ExamGuideline': return ExamGuidelineModel;
     case 'Popup': return PopupModel;
-    default: throw new Error('Invalid model name');
+    default: throw new Error(`Invalid model name: ${modelName}`);
   }
 };
 
@@ -36,7 +36,10 @@ export const deleteDocument = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await connectToDatabase();
     const Model = getModel(data.modelName);
-    await Model.findByIdAndDelete(data.id);
+    const result = await Model.findByIdAndDelete(data.id);
+    if (!result) {
+      await Model.deleteOne({ _id: data.id });
+    }
     return { success: true };
   });
 
@@ -46,12 +49,17 @@ export const updateDocument = createServerFn({ method: 'POST' })
     await connectToDatabase();
     const Model = getModel(data.modelName);
     const updateData = { ...data.updateData };
+    delete updateData._id;
+    delete updateData.__v;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
+
     if (data.modelName === 'Management') {
       if (!updateData.role) updateData.role = 'Management';
       if (updateData.details && !updateData.message) updateData.message = updateData.details;
       if (!updateData.message && !updateData.details) updateData.message = '';
     }
-    if (data.modelName === 'ExamNotice' && updateData.date) {
+    if ((data.modelName === 'ExamNotice' || data.modelName === 'Event' || data.modelName === 'Album') && updateData.date) {
       updateData.date = new Date(updateData.date);
     }
     if (data.modelName === 'ExamSchedule' && updateData.status) {
@@ -60,7 +68,12 @@ export const updateDocument = createServerFn({ method: 'POST' })
     if (data.modelName === 'ExamGuideline' && updateData.order !== undefined) {
       updateData.order = Number(updateData.order) || 0;
     }
-    await Model.findByIdAndUpdate(data.id, updateData);
+    if (data.modelName === 'Achiever') {
+      if (updateData.rank !== undefined && updateData.rank !== '') {
+        updateData.rank = Number(updateData.rank) || undefined;
+      }
+    }
+    await Model.findByIdAndUpdate(data.id, updateData, { new: true });
     return { success: true };
   });
 
@@ -70,6 +83,9 @@ export const createDocument = createServerFn({ method: 'POST' })
     await connectToDatabase();
     const Model = getModel(data.modelName);
     const createData = { ...data.createData };
+    delete createData._id;
+    delete createData.__v;
+
     if (data.modelName === 'Management') {
       if (!createData.role) createData.role = 'Management';
       if (!createData.details) createData.details = '';
@@ -77,7 +93,7 @@ export const createDocument = createServerFn({ method: 'POST' })
       if (!createData.imageUrl) createData.imageUrl = '';
       if (createData.order === undefined) createData.order = 0;
     }
-    if (data.modelName === 'ExamNotice' && createData.date) {
+    if ((data.modelName === 'ExamNotice' || data.modelName === 'Event' || data.modelName === 'Album') && createData.date) {
       createData.date = new Date(createData.date);
     }
     if (data.modelName === 'ExamSchedule' && createData.status) {
@@ -85,6 +101,11 @@ export const createDocument = createServerFn({ method: 'POST' })
     }
     if (data.modelName === 'ExamGuideline' && createData.order !== undefined) {
       createData.order = Number(createData.order) || 0;
+    }
+    if (data.modelName === 'Achiever') {
+      if (createData.rank !== undefined && createData.rank !== '') {
+        createData.rank = Number(createData.rank) || undefined;
+      }
     }
     const doc = new Model(createData);
     await doc.save();

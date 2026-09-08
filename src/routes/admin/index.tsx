@@ -135,8 +135,13 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this record?')) return;
-    await deleteDocument({ data: { modelName, id }});
-    loadData();
+    try {
+      await deleteDocument({ data: { modelName, id }});
+      loadData();
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      alert("Failed to delete record: " + (err?.message || "Unknown error"));
+    }
   };
 
   const openEdit = (record: any) => {
@@ -145,7 +150,7 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
     const formValues = { ...defaultState };
     Object.keys(defaultState).forEach(k => {
       if (record[k] !== undefined) {
-        if (k === 'date' && (modelName === 'Event' || modelName === 'ExamNotice')) {
+        if (k === 'date' && (modelName === 'Event' || modelName === 'ExamNotice' || modelName === 'Album')) {
           try {
             formValues[k] = new Date(record[k]).toISOString().split('T')[0];
           } catch {
@@ -449,7 +454,7 @@ function CrudTab({ title, modelName, fetchData, defaultState }: { title: string,
                     ) : (
                       <input 
                         type={
-                          c === 'date' && (modelName === 'Event' || modelName === 'ExamNotice')
+                          c === 'date' && (modelName === 'Event' || modelName === 'ExamNotice' || modelName === 'Album')
                             ? 'date' 
                             : c === 'order' || c === 'rank' 
                               ? 'number' 
