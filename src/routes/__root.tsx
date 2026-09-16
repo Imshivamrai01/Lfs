@@ -114,8 +114,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Little Flower School (LFS), Salempur — CISCE affiliated (ICSE & ISC) institution committed to holistic academic excellence, character building, and moral values.",
       },
-      { property: "og:url", content: "https://lfssalempur.online/" },
-      { property: "og:image", content: "https://lfssalempur.online/lfs-logo.png" },
+      { property: "og:url", content: "https://www.lfssalempur.com/" },
+      { property: "og:image", content: "https://www.lfssalempur.com/lfs-logo.png" },
       { property: "og:image:alt", content: "Little Flower School Salempur Crest & Logo" },
       { property: "og:locale", content: "en_IN" },
 
@@ -127,7 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Premier ICSE & ISC institution in Salempur, Deoria UP. Admissions open for LKG to VIII.",
       },
-      { name: "twitter:image", content: "https://lfssalempur.online/lfs-logo.png" },
+      { name: "twitter:image", content: "https://www.lfssalempur.com/lfs-logo.png" },
     ],
     links: [
       {
@@ -154,12 +154,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@graph": [
             {
               "@type": ["School", "EducationalOrganization"],
-              "@id": "https://lfssalempur.online/#school",
+              "@id": "https://www.lfssalempur.com/#school",
               name: "Little Flower School, Salempur",
               alternateName: ["LFS Salempur", "Little Flower School Salempur", "LFS"],
-              url: "https://lfssalempur.online",
-              logo: "https://lfssalempur.online/lfs-logo.png",
-              image: "https://lfssalempur.online/lfs-logo.png",
+              url: "https://www.lfssalempur.com",
+              logo: "https://www.lfssalempur.com/lfs-logo.png",
+              image: "https://www.lfssalempur.com/lfs-logo.png",
               description:
                 "Little Flower School, Salempur is an esteemed ICSE & ISC affiliated co-educational institution in Salempur, Deoria, Uttar Pradesh.",
               slogan: "For God and Man",
@@ -228,12 +228,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             },
             {
               "@type": "WebSite",
-              "@id": "https://lfssalempur.online/#website",
-              url: "https://lfssalempur.online",
+              "@id": "https://www.lfssalempur.com/#website",
+              url: "https://www.lfssalempur.com",
               name: "Little Flower School, Salempur",
               description: "Official Website of Little Flower School, Salempur, Deoria, UP",
               publisher: {
-                "@id": "https://lfssalempur.online/#school",
+                "@id": "https://www.lfssalempur.com/#school",
               },
               inLanguage: "en-IN",
             },

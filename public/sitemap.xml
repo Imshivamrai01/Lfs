@@ -6,7 +6,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://lfssalempur.online/</loc>
+    <loc>https://www.lfssalempur.com/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
@@ -14,7 +14,7 @@
 
   <!-- About Us -->
   <url>
-    <loc>https://lfssalempur.online/about</loc>
+    <loc>https://www.lfssalempur.com/about</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -22,7 +22,7 @@
 
   <!-- Academics & Curriculum -->
   <url>
-    <loc>https://lfssalempur.online/academics</loc>
+    <loc>https://www.lfssalempur.com/academics</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -30,7 +30,7 @@
 
   <!-- Admissions -->
   <url>
-    <loc>https://lfssalempur.online/admissions</loc>
+    <loc>https://www.lfssalempur.com/admissions</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
@@ -38,7 +38,7 @@
 
   <!-- Achievers & Toppers -->
   <url>
-    <loc>https://lfssalempur.online/achievers</loc>
+    <loc>https://www.lfssalempur.com/achievers</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
@@ -46,7 +46,7 @@
 
   <!-- Campus & Infrastructure -->
   <url>
-    <loc>https://lfssalempur.online/campus</loc>
+    <loc>https://www.lfssalempur.com/campus</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
@@ -54,7 +54,7 @@
 
   <!-- Events & Calendar -->
   <url>
-    <loc>https://lfssalempur.online/events</loc>
+    <loc>https://www.lfssalempur.com/events</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
@@ -62,7 +62,7 @@
 
   <!-- Examinations & Notices -->
   <url>
-    <loc>https://lfssalempur.online/exams</loc>
+    <loc>https://www.lfssalempur.com/exams</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
@@ -70,7 +70,7 @@
 
   <!-- Photo Gallery -->
   <url>
-    <loc>https://lfssalempur.online/gallery</loc>
+    <loc>https://www.lfssalempur.com/gallery</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
@@ -78,7 +78,7 @@
 
   <!-- Alumni Portal -->
   <url>
-    <loc>https://lfssalempur.online/alumni</loc>
+    <loc>https://www.lfssalempur.com/alumni</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
@@ -86,7 +86,7 @@
 
   <!-- Contact Us -->
   <url>
-    <loc>https://lfssalempur.online/contact</loc>
+    <loc>https://www.lfssalempur.com/contact</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>

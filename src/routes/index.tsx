@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
         content:
           "Welcome to Little Flower School (LFS), Salempur. Premier ICSE & ISC educational institution in Deoria, UP offering quality education from LKG to Class XII.",
       },
-      { property: "og:url", content: "https://lfssalempur.online/" },
+      { property: "og:url", content: "https://www.lfssalempur.com/" },
     ],
     links: [{ rel: "canonical", href: "/" }],
   }),

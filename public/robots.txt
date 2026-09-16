@@ -1,5 +1,5 @@
 # robots.txt for Little Flower School, Salempur
-# Official Website: https://lfssalempur.online
+# Official Website: https://www.lfssalempur.com/
 
 User-agent: *
 Allow: /
@@ -56,5 +56,5 @@ Disallow: /admin/
 Disallow: /api/
 
 # Sitemaps and LLMs context
-Sitemap: https://lfssalempur.online/sitemap.xml
-LLMs-Txt: https://lfssalempur.online/llms.txt
+Sitemap: https://www.lfssalempur.com/sitemap.xml
+LLMs-Txt: https://www.lfssalempur.com/llms.txt
