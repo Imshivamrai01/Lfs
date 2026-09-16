@@ -58,7 +58,7 @@ export const registerAlumni = createServerFn({ method: 'POST' })
 export const getAchievers = createServerFn({ method: 'GET' })
   .handler(async () => {
     await connectToDatabase();
-    const achievers = await AchieverModel.find().lean();
+    const achievers = await AchieverModel.find().sort({ rank: 1, pct: -1, _id: 1 }).lean();
     return achievers.map(a => ({ ...a, _id: a._id?.toString() }));
   });
 

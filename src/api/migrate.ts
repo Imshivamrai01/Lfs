@@ -55,10 +55,13 @@ export const runMigration = createServerFn({ method: 'POST' })
     // 1. Migrate Achievers
     const achieverCount = await AchieverModel.countDocuments();
     if (achieverCount === 0) {
-      const achieverDocs = ACHIEVERS.map(a => ({
+      const achieverDocs = ACHIEVERS.map((a, index) => ({
         name: a.name,
-        batchYear: a.exam.includes('2025-26') ? '2025-26' : 'Unknown',
+        batchYear: a.exam.includes('2025-26') ? '2025-26' : '2025-26',
         achievement: `${a.pct} in ${a.exam}`,
+        exam: a.exam,
+        pct: a.pct,
+        rank: index + 1,
         category: 'Academic'
       }));
       await AchieverModel.insertMany(achieverDocs);

@@ -260,9 +260,13 @@ function HeroSlideshow({ achieversList }: { achieversList: Achiever[] }) {
     }
   }, [cur]);
 
-  const a = achieversList[cur];
+  if (!achieversList || achieversList.length === 0) return null;
+  const a = achieversList[cur] || achieversList[0];
   const p = prev !== null ? achieversList[prev] : null;
-  const isXII = a.exam.includes("XII");
+  if (!a) return null;
+  const isXII = `${a.exam || ""} ${(a as any).achievement || ""}`.toUpperCase().includes("XII") || 
+                `${a.exam || ""}`.toUpperCase().includes("ISC") || 
+                `${a.exam || ""}`.toUpperCase().includes("12");
 
   return (
     <div
@@ -389,7 +393,7 @@ function HeroSlideshow({ achieversList }: { achieversList: Achiever[] }) {
                 color: isXII ? "oklch(0.82 0.15 82)" : "oklch(0.75 0.12 240)",
               }}
             >
-              {isXII ? "ISC Class XII" : "ICSE Class X"} · 2025-26
+              {a.exam || `${isXII ? "ISC Class XII" : "ICSE Class X"} · ${(a as any).batchYear || "2025-26"}`}
             </span>
           </div>
 
@@ -1141,13 +1145,17 @@ export function AchieversSection({ data }: { data?: Achiever[] }) {
 
   const achieversList = data && data.length > 0 ? data : ALL_ACHIEVERS;
 
-  const isXIIExam = (examStr: string = "") =>
-    examStr.includes("XII") || examStr.includes("12") || examStr.includes("ISC");
-  const isXExam = (examStr: string = "") =>
-    (examStr.includes("X") || examStr.includes("10") || examStr.includes("ICSE")) && !isXIIExam(examStr);
+  const isXIIExam = (examStr: string = "", achievementStr: string = "") => {
+    const combined = `${examStr} ${achievementStr}`.toUpperCase();
+    return combined.includes("XII") || combined.includes("12") || combined.includes("ISC");
+  };
+  const isXExam = (examStr: string = "", achievementStr: string = "") => {
+    const combined = `${examStr} ${achievementStr}`.toUpperCase();
+    return (combined.includes("X") || combined.includes("10") || combined.includes("ICSE")) && !isXIIExam(examStr, achievementStr);
+  };
 
-  const filtered = achieversList.filter((a) =>
-    filter === "all" ? true : filter === "XII" ? isXIIExam(a.exam) : isXExam(a.exam),
+  const filtered = achieversList.filter((a: any) =>
+    filter === "all" ? true : filter === "XII" ? isXIIExam(a.exam, a.achievement) : isXExam(a.exam, a.achievement),
   );
   const rankMap = computeRanks(filtered);
 

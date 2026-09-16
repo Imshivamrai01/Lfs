@@ -27,6 +27,9 @@ interface Achiever {
   pct: string;
   avatar: string;
   poster: string;
+  rank?: number;
+  batchYear?: string;
+  achievement?: string;
 }
 
 const CLASS12: Achiever[] = [
@@ -849,7 +852,7 @@ export function Achievers() {
     getAchievers()
       .then((data) => {
         if (data && data.length > 0) {
-          const mappedData = data.map((item: any) => {
+          const mappedData = data.map((item: any, index: number) => {
             // Extract pct if stored in achievement
             let pct = item.pct || "";
             if (!pct && item.achievement) {
@@ -863,7 +866,7 @@ export function Achievers() {
               exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
             }
 
-            const img = item.imageUrl || getFallbackImage(item.name) || img12_angel;
+            const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || img12_angel;
 
             return {
               name: item.name,
@@ -871,6 +874,9 @@ export function Achievers() {
               pct: pct || "95.00%",
               avatar: img,
               poster: img,
+              rank: item.rank !== undefined ? Number(item.rank) : index + 1,
+              batchYear: item.batchYear || "2025-26",
+              achievement: item.achievement,
             };
           });
           setAchievers(mappedData);
@@ -879,25 +885,42 @@ export function Achievers() {
       .catch(console.error);
   }, []);
 
-  const isClassXII = (examStr: string = "") =>
-    examStr.includes("XII") || examStr.includes("12") || examStr.includes("ISC");
-  
-  const isClassX = (examStr: string = "") =>
-    (examStr.includes("X") || examStr.includes("10") || examStr.includes("ICSE")) && !isClassXII(examStr);
+  const parseScore = (pctStr: string = "") => {
+    const val = parseFloat(pctStr.replace("%", "").trim());
+    return isNaN(val) ? 0 : val;
+  };
 
-  const top12Filtered = achievers.filter((a) => isClassXII(a.exam));
-  const top10Filtered = achievers.filter((a) => isClassX(a.exam));
+  const isClassXII = (a: Achiever) => {
+    const str = `${a.exam || ""} ${a.achievement || ""}`.toUpperCase();
+    return str.includes("XII") || str.includes("12") || str.includes("ISC");
+  };
+
+  const isClassX = (a: Achiever) => {
+    const str = `${a.exam || ""} ${a.achievement || ""}`.toUpperCase();
+    return (str.includes("X") || str.includes("10") || str.includes("ICSE")) && !isClassXII(a);
+  };
+
+  const sortList = (list: Achiever[]) => {
+    return [...list].sort((a, b) => {
+      if (a.rank && b.rank && a.rank !== b.rank) return a.rank - b.rank;
+      return parseScore(b.pct) - parseScore(a.pct);
+    });
+  };
+
+  const top12Filtered = sortList(achievers.filter(isClassXII));
+  const top10Filtered = sortList(achievers.filter(isClassX));
 
   const top12 = top12Filtered.length > 0 ? top12Filtered.slice(0, 5) : CLASS12;
   const top10 = top10Filtered.length > 0 ? top10Filtered.slice(0, 5) : CLASS10;
 
+  const currentSession = achievers[0]?.batchYear || "2025-26";
 
   return (
     <section className="screen-fit-section overflow-hidden bg-[color:var(--section)]">
       <div className="container-page">
         <div className="flex flex-wrap items-end justify-between gap-8">
           <div className="max-w-2xl">
-            <SectionEyebrow>Class of 2025-26</SectionEyebrow>
+            <SectionEyebrow>Class of {currentSession}</SectionEyebrow>
             <Reveal
               as="h2"
               className="text-display text-[clamp(2.2rem,5vw,3.75rem)] text-[color:var(--ink)]"

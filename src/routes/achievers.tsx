@@ -70,31 +70,43 @@ export const Route = createFileRoute("/achievers")({
       async function fetchData() {
         try {
           const data = await getAchievers();
-          const mappedData = data.map((item: any, index: number) => {
-            let pct = item.pct || "";
-            if (!pct && item.achievement) {
-              const match = item.achievement.match(/\d+(\.\d+)?%/);
-              if (match) pct = match[0];
-            }
+          if (data && data.length > 0) {
+            const mappedData = data.map((item: any, index: number) => {
+              let pct = item.pct || "";
+              if (!pct && item.achievement) {
+                const match = item.achievement.match(/\d+(\.\d+)?%/);
+                if (match) pct = match[0];
+              }
 
-            let exam = item.exam || item.achievement || "Achiever";
-            if (exam.startsWith(pct)) {
-              exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
-            }
+              let exam = item.exam || item.achievement || "Achiever";
+              if (exam.startsWith(pct)) {
+                exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
+              }
 
-            const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || img12_angel;
+              const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || img12_angel;
 
-            return {
-              ...item,
-              name: item.name,
-              exam: exam || "2025-26",
-              pct: pct || "95.00%",
-              rank: item.rank || index + 1,
-              avatar: img,
-              poster: img,
-            };
-          });
-          setAchievers(mappedData);
+              return {
+                ...item,
+                name: item.name,
+                exam: exam || "2025-26",
+                pct: pct || "95.00%",
+                rank: item.rank !== undefined && item.rank !== "" ? Number(item.rank) : index + 1,
+                avatar: img,
+                poster: img,
+                batchYear: item.batchYear || "2025-26",
+              };
+            });
+
+            // Sort by rank ascending then pct descending
+            mappedData.sort((a: any, b: any) => {
+              if (a.rank && b.rank && a.rank !== b.rank) return a.rank - b.rank;
+              const pA = parseFloat(String(a.pct).replace("%", "")) || 0;
+              const pB = parseFloat(String(b.pct).replace("%", "")) || 0;
+              return pB - pA;
+            });
+
+            setAchievers(mappedData);
+          }
         } catch (e) {
           console.error("Error fetching achievers:", e);
         }
@@ -102,10 +114,12 @@ export const Route = createFileRoute("/achievers")({
       fetchData();
     }, []);
 
+    const sessionYear = achievers[0]?.batchYear || "2025-26";
+
     return (
       <>
         <PageHeader
-          eyebrow="Honour Roll · 2025-26"
+          eyebrow={`Honour Roll · ${sessionYear}`}
           title={
             <>
               Our achievers,
