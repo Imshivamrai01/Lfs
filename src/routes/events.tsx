@@ -746,14 +746,14 @@ function EventsPage() {
         up.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         p.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        setUpcoming(up.length > 0 ? up : FALLBACK_UPCOMING);
+        setUpcoming(up);
         setPast(p.length > 0 ? p : FALLBACK_PAST);
       } else {
-        setUpcoming(FALLBACK_UPCOMING);
+        setUpcoming([]);
         setPast(FALLBACK_PAST);
       }
     }).catch(() => {
-      setUpcoming(FALLBACK_UPCOMING);
+      setUpcoming([]);
       setPast(FALLBACK_PAST);
     });
   }, []);
@@ -862,7 +862,48 @@ function EventsPage() {
               <Sparkles size={22} color="oklch(0.82 0.15 82)" />
             </h2>
           </div>
-          <UpcomingTimeline upcoming={upcoming} />
+          {upcoming.length > 0 ? (
+            <UpcomingTimeline upcoming={upcoming} />
+          ) : (
+            <div
+              style={{
+                background: "white",
+                borderRadius: "1.5rem",
+                padding: "3rem 2rem",
+                textAlign: "center",
+                border: "1.5px dashed oklch(0.42 0.15 260 / 0.15)",
+                boxShadow: "0 2px 12px oklch(0.28 0.12 262 / 0.04)",
+              }}
+            >
+              <Calendar
+                size={36}
+                style={{ margin: "0 auto 1rem", opacity: 0.35, color: "oklch(0.42 0.15 260)" }}
+              />
+              <h3
+                style={{
+                  fontFamily: "'Fraunces',serif",
+                  fontSize: "1.25rem",
+                  color: "oklch(0.18 0.04 262)",
+                  margin: "0 0 0.4rem",
+                }}
+              >
+                No Upcoming Events Scheduled
+              </h3>
+              <p
+                style={{
+                  fontFamily: "'Inter',sans-serif",
+                  fontSize: "0.88rem",
+                  color: "oklch(0.42 0.05 260)",
+                  maxWidth: "420px",
+                  margin: "0 auto",
+                  lineHeight: 1.5,
+                }}
+              >
+                There are currently no upcoming notices or events on the calendar. Please check back
+                soon or explore our past highlights below.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
