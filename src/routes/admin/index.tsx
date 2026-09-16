@@ -6,6 +6,12 @@ import { deleteDocument, updateDocument, createDocument, createPhotos, getDashbo
 import { Plus, Trash2, Edit2, Loader2, X, Users, Award, GraduationCap, CalendarDays, ImageIcon, ChevronLeft, ImagePlus, Megaphone, Eye, ExternalLink, Sparkles, Check, Power, UploadCloud, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/')({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — LFS Salempur Admin" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: AdminDashboard,
 });
 

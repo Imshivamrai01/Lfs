@@ -14,6 +14,24 @@ import { GalleryStrip } from "@/components/home/gallery-strip";
 import { CTA } from "@/components/home/cta";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Little Flower School, Salempur — For God and Man | ICSE & ISC" },
+      {
+        name: "description",
+        content:
+          "Welcome to Little Flower School (LFS), Salempur. Premier ICSE & ISC educational institution in Deoria, UP offering quality education from LKG to Class XII. Admissions Open.",
+      },
+      { property: "og:title", content: "Little Flower School, Salempur — For God and Man" },
+      {
+        property: "og:description",
+        content:
+          "Welcome to Little Flower School (LFS), Salempur. Premier ICSE & ISC educational institution in Deoria, UP offering quality education from LKG to Class XII.",
+      },
+      { property: "og:url", content: "https://lfssalempur.online/" },
+    ],
+    links: [{ rel: "canonical", href: "/" }],
+  }),
   component: Index,
 });
 

@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { loginAdmin } from '../../api/functions';
 
 export const Route = createFileRoute('/admin/login')({
+  head: () => ({
+    meta: [
+      { title: "Admin Login — Little Flower School, Salempur" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: AdminLogin,
 });
 

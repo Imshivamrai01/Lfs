@@ -17,6 +17,12 @@ import {
 } from 'lucide-react';
 
 export const Route = createFileRoute('/admin')({
+  head: () => ({
+    meta: [
+      { title: "Admin Portal — Little Flower School, Salempur" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: AdminLayout,
 });
 

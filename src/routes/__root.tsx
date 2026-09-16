@@ -80,17 +80,54 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Little Flower School, Salempur — For God and Man" },
+      { title: "Little Flower School, Salempur — For God and Man | ICSE & ISC School" },
       {
         name: "description",
         content:
-          "Little Flower School, Salempur — a value-based ICSE & ISC institution nurturing academic excellence, character and leadership since decades. Admissions open.",
+          "Little Flower School, Salempur (LFS Salempur) — premier ICSE (10th) & ISC (12th) co-educational Christian minority institution in Deoria, UP. Nurturing academic brilliance, holistic leadership, and moral integrity since decades.",
+      },
+      {
+        name: "keywords",
+        content:
+          "Little Flower School Salempur, LFS Salempur, best school in Salempur, ICSE school Deoria, ISC school Salempur UP, Little Flower School Deoria, top schools in Eastern UP, ICSE board admission Salempur, Little Flower Mission Education Society, Fr Jubish Thomas CST, school admission LKG to 12th Salempur",
       },
       { name: "author", content: "Little Flower School, Salempur" },
+      { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
       { name: "theme-color", content: "#0B4DA2" },
-      { property: "og:site_name", content: "Little Flower School, Salempur" },
+      { name: "application-name", content: "LFS Salempur" },
+      { name: "apple-mobile-web-app-title", content: "LFS Salempur" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      
+      // Geo Tags for Local SEO Salempur & Deoria UP
+      { name: "geo.region", content: "IN-UP" },
+      { name: "geo.placename", content: "Salempur, Deoria" },
+      { name: "geo.position", content: "26.2974;83.9298" },
+      { name: "ICBM", content: "26.2974, 83.9298" },
+
+      // Open Graph
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Little Flower School, Salempur" },
+      { property: "og:title", content: "Little Flower School, Salempur — For God and Man" },
+      {
+        property: "og:description",
+        content:
+          "Little Flower School (LFS), Salempur — CISCE affiliated (ICSE & ISC) institution committed to holistic academic excellence, character building, and moral values.",
+      },
+      { property: "og:url", content: "https://lfssalempur.online/" },
+      { property: "og:image", content: "https://lfssalempur.online/lfs-logo.png" },
+      { property: "og:image:alt", content: "Little Flower School Salempur Crest & Logo" },
+      { property: "og:locale", content: "en_IN" },
+
+      // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Little Flower School, Salempur — For God and Man" },
+      {
+        name: "twitter:description",
+        content:
+          "Premier ICSE & ISC institution in Salempur, Deoria UP. Admissions open for LKG to VIII.",
+      },
+      { name: "twitter:image", content: "https://lfssalempur.online/lfs-logo.png" },
     ],
     links: [
       {
@@ -99,6 +136,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", type: "image/png", href: "/lfs-logo.png" },
       { rel: "apple-touch-icon", href: "/lfs-logo.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
+      { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
+      { rel: "alternate", type: "text/plain", href: "/llms.txt", title: "LLMs Context" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -111,22 +151,93 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "School",
-          name: "Little Flower School, Salempur",
-          url: "/",
-          logo: "/lfs-logo.png",
-          telephone: "+91-9453344112",
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Salempur",
-            addressRegion: "Uttar Pradesh",
-            addressCountry: "IN",
-          },
-          parentOrganization: {
-            "@type": "Organization",
-            name: "Little Flower Mission Education Society, Gorakhpur",
-          },
-          slogan: "For God and Man",
+          "@graph": [
+            {
+              "@type": ["School", "EducationalOrganization"],
+              "@id": "https://lfssalempur.online/#school",
+              name: "Little Flower School, Salempur",
+              alternateName: ["LFS Salempur", "Little Flower School Salempur", "LFS"],
+              url: "https://lfssalempur.online",
+              logo: "https://lfssalempur.online/lfs-logo.png",
+              image: "https://lfssalempur.online/lfs-logo.png",
+              description:
+                "Little Flower School, Salempur is an esteemed ICSE & ISC affiliated co-educational institution in Salempur, Deoria, Uttar Pradesh.",
+              slogan: "For God and Man",
+              telephone: "+91-9453344112",
+              email: "littleflowersalempur@gmail.com",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "Little Flower School Campus",
+                addressLocality: "Salempur",
+                addressRegion: "Uttar Pradesh",
+                postalCode: "274509",
+                addressCountry: "IN",
+              },
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: 26.2974,
+                longitude: 83.9298,
+              },
+              hasCredential: [
+                {
+                  "@type": "EducationalOccupationalCredential",
+                  credentialCategory: "degree",
+                  name: "ICSE (Class X) & ISC (Class XII) Affiliation - CISCE New Delhi",
+                },
+              ],
+              parentOrganization: {
+                "@type": "Organization",
+                name: "Little Flower Mission Education Society, Gorakhpur",
+              },
+              founder: {
+                "@type": "Organization",
+                name: "CST Fathers (Little Flower Congregation)",
+              },
+              employee: [
+                {
+                  "@type": "Person",
+                  name: "Fr. Jubish Thomas CST",
+                  jobTitle: "Principal",
+                },
+                {
+                  "@type": "Person",
+                  name: "Fr. Benoy Mathew CST",
+                  jobTitle: "Manager",
+                },
+              ],
+              contactPoint: [
+                {
+                  "@type": "ContactPoint",
+                  telephone: "+91-9453344112",
+                  contactType: "Admissions & Inquiries",
+                  areaServed: "IN",
+                  availableLanguage: ["English", "Hindi"],
+                },
+                {
+                  "@type": "ContactPoint",
+                  telephone: "+91-8765932092",
+                  contactType: "Administrative Office",
+                  areaServed: "IN",
+                  availableLanguage: ["English", "Hindi"],
+                },
+              ],
+              sameAs: [
+                "https://www.lfssalempur.online/payonline/",
+                "https://github.com/shineinfosolutions/lfs-salempur",
+              ],
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://lfssalempur.online/#website",
+              url: "https://lfssalempur.online",
+              name: "Little Flower School, Salempur",
+              description: "Official Website of Little Flower School, Salempur, Deoria, UP",
+              publisher: {
+                "@id": "https://lfssalempur.online/#school",
+              },
+              inLanguage: "en-IN",
+            },
+          ],
         }),
       },
     ],
