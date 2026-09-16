@@ -108,6 +108,23 @@ const CLASS10: Achiever[] = [
   },
 ];
 
+const KNOWN_ACHIEVERS_MAP: Record<string, { exam: string; pct: string; isXII: boolean; avatar: string }> = {
+  "angel verma": { exam: "ISC XII · 2025-26", pct: "98.00%", isXII: true, avatar: img12_angel },
+  "priyanshu singh": { exam: "ISC XII · 2025-26", pct: "95.75%", isXII: true, avatar: img12_priy },
+  "laxmi": { exam: "ISC XII · 2025-26", pct: "95.75%", isXII: true, avatar: img12_laxmi },
+  "putul sharma": { exam: "ISC XII · 2025-26", pct: "95.00%", isXII: true, avatar: img12_putul },
+  "sanidhya kumar gupta": { exam: "ISC XII · 2025-26", pct: "95.00%", isXII: true, avatar: img12_sanidhya },
+  "shreya baranwal": { exam: "ISC XII · 2025-26", pct: "90.25%", isXII: true, avatar: img12_shreya },
+  "vikas kushwaha": { exam: "ISC XII · 2025-26", pct: "89.50%", isXII: true, avatar: img12_vikas },
+  "akshaj srivastav": { exam: "ISC XII · 2025-26", pct: "89.00%", isXII: true, avatar: img12_akshaj },
+  "divyanshu sharma": { exam: "ICSE X · 2025-26", pct: "97.80%", isXII: false, avatar: img10_divyansh },
+  "adarsh baranwal": { exam: "ICSE X · 2025-26", pct: "95.60%", isXII: false, avatar: img10_adarsh },
+  "samar gupta": { exam: "ICSE X · 2025-26", pct: "94.40%", isXII: false, avatar: img10_samar },
+  "ananya gupta": { exam: "ICSE X · 2025-26", pct: "94.00%", isXII: false, avatar: img10_ananya },
+  "riya yadav": { exam: "ICSE X · 2025-26", pct: "93.60%", isXII: false, avatar: img10_riya },
+  "sanket tiwari": { exam: "ICSE X · 2025-26", pct: "89.00%", isXII: false, avatar: img10_riya },
+};
+
 const FALLBACK_IMAGES: Record<string, string> = {
   "angel verma": img12_angel,
   "priyanshu singh": img12_priy,
@@ -127,7 +144,8 @@ const FALLBACK_IMAGES: Record<string, string> = {
 
 function getFallbackImage(name: string) {
   if (!name) return "";
-  return FALLBACK_IMAGES[name.trim().toLowerCase()] || "";
+  const key = name.trim().toLowerCase();
+  return FALLBACK_IMAGES[key] || (KNOWN_ACHIEVERS_MAP[key]?.avatar) || "";
 }
 
 const RANK_META = [
@@ -853,30 +871,40 @@ export function Achievers() {
       .then((data) => {
         if (data && data.length > 0) {
           const mappedData = data.map((item: any, index: number) => {
-            // Extract pct if stored in achievement
+            const normName = (item.name || "").trim().toLowerCase();
+            const known = KNOWN_ACHIEVERS_MAP[normName];
+
+            // Extract pct if stored in item or achievement
             let pct = item.pct || "";
             if (!pct && item.achievement) {
               const match = item.achievement.match(/\d+(\.\d+)?%/);
               if (match) pct = match[0];
             }
+            if (!pct && known) {
+              pct = known.pct;
+            }
 
-            let exam = item.exam || item.achievement || "Achiever";
+            let exam = item.exam || item.achievement || "";
             // Clean up exam title if needed
             if (exam.startsWith(pct)) {
               exam = exam.replace(pct, "").replace(/^ in /i, "").trim();
             }
+            if ((!exam || exam === "Achiever") && known) {
+              exam = known.exam;
+            }
 
-            const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || img12_angel;
+            const img = item.imageUrl || item.avatar || getFallbackImage(item.name) || (known ? known.avatar : img12_angel);
 
             return {
+              _id: item._id,
               name: item.name,
-              exam: exam || "2025-26",
-              pct: pct || "95.00%",
+              exam: exam || (known ? known.exam : (item.batchYear ? `Class XII · ${item.batchYear}` : "2025-26")),
+              pct: pct || (known ? known.pct : "95.00%"),
               avatar: img,
               poster: img,
-              rank: item.rank !== undefined ? Number(item.rank) : index + 1,
+              rank: item.rank !== undefined && item.rank !== null && item.rank !== "" && Number(item.rank) !== 99 ? Number(item.rank) : index + 1,
               batchYear: item.batchYear || "2025-26",
-              achievement: item.achievement,
+              achievement: item.achievement || (known ? `${known.pct} in ${known.exam}` : ""),
             };
           });
           setAchievers(mappedData);
@@ -891,13 +919,19 @@ export function Achievers() {
   };
 
   const isClassXII = (a: Achiever) => {
+    const normName = (a.name || "").trim().toLowerCase();
+    const known = KNOWN_ACHIEVERS_MAP[normName];
+    if (known) return known.isXII;
     const str = `${a.exam || ""} ${a.achievement || ""}`.toUpperCase();
     return str.includes("XII") || str.includes("12") || str.includes("ISC");
   };
 
   const isClassX = (a: Achiever) => {
+    const normName = (a.name || "").trim().toLowerCase();
+    const known = KNOWN_ACHIEVERS_MAP[normName];
+    if (known) return !known.isXII;
     const str = `${a.exam || ""} ${a.achievement || ""}`.toUpperCase();
-    return (str.includes("X") || str.includes("10") || str.includes("ICSE")) && !isClassXII(a);
+    return (str.includes("X") || str.includes("10") || str.includes("ICSE")) || !isClassXII(a);
   };
 
   const sortList = (list: Achiever[]) => {
